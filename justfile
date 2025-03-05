@@ -133,6 +133,11 @@ cln-newaddr container_name:
 cln-connect container_name id host port:
   @just cln-exec {{container_name}} --keywords connect "id"={{id}} "host"={{host}} "port"={{port}}
 
+[private]
+[group("cln0")]
+cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
+  just cln-exec {{container_name}} --keywords fundchannel "id"={{id}} "amount"={{amount_sat}} "feerate"={{feerate}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+
 # Execute a command on instance "cln0"
 [group("cln0")]
 cln0-exec +command:
@@ -188,10 +193,17 @@ cln0-connect-lnd6:
 
 [private]
 [group("cln0")]
-cln0-fundchannel-cln1 amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
+cln0-fundchannel-cln1 amount_sat='16777215' feerate='1' announce='true' minconf='6' push_msat='8388607500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln0-exec --keywords fundchannel "id"=$(just cln1-id) "amount"={{amount_sat}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+  just cln-fundchannel {{cln0_container_name}} $(just cln1-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+
+[private]
+[group("cln0")]
+cln0-fundchannel-cln2 amount_sat='8388607' feerate='1' announce='true' minconf='6' push_msat='4194303500':
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-fundchannel {{cln0_container_name}} $(just cln2-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln0")]
@@ -291,6 +303,7 @@ init-lightning:
   @just cln0-waitblockheight 105
   @just setup-connect-peers
   @just cln0-fundchannel-cln1
+  @just cln0-fundchannel-cln2
   @just bitcoin::mine 6
   @just cln0-waitblockheight 111
   #@just cln0-fundchannel-lnd6
@@ -318,4 +331,5 @@ info:
   @echo "cln0 container name: {{cln0_container_name}}"
   @echo "cln0 rest endpoint: https://localhost:13010"
   @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
+  @just cln-exec {{cln0_container_name}} getinfo
   @just cln-exec {{cln0_container_name}} showrunes

@@ -4,7 +4,7 @@ bitcoin_container_rpcport := '18443'
 # Execute a bitcoin-cli command
 [group("bitcoin")]
 exec +command:
-  docker exec -t {{bitcoin_container_name}} bitcoin-cli -datadir=/home/bitcoin/.bitcoin -regtest -rpcport=18443 {{command}}
+  @docker exec -t {{bitcoin_container_name}} bitcoin-cli -datadir=/home/bitcoin/.bitcoin -regtest -rpcport=18443 {{command}}
 
 # Get general information from the bitcoin daemon
 [group("bitcoin")]
@@ -28,3 +28,4 @@ info:
   @echo "# bitcoin"
   @echo "bitcoin container name: {{bitcoin_container_name}}"
   @echo "bitcoin container rpcport: {{bitcoin_container_rpcport}}"
+  @just bitcoin::getinfo
