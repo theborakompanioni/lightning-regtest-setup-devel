@@ -102,6 +102,9 @@ services:
       - '--bitcoin-rpcuser=app'
       - '--bitcoin-rpcpassword=app'
       - '--grpc-port=19935'
+      - '--clnrest-host=0.0.0.0'
+      - '--clnrest-port=3010'
+      - '--clnrest-swagger-root=/swagger-ui'
       - '--network=regtest'
       - '--log-level=debug'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
@@ -127,6 +130,7 @@ services:
       - ./data/cln0_app/regtest/server-key.pem:/home/clightning/.lightning/regtest/server-key.pem
     ports:
       - "19935:19846"
+      - "13010:3010"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
       interval: 10s

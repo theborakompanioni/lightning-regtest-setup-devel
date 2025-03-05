@@ -73,7 +73,7 @@ check-docker:
 # Execute a command in a running container
 [group("docker")]
 docker-exec +command: check-docker
-  docker compose --file ./docker-compose.yml {{command}}
+  @docker compose --file ./docker-compose.yml {{command}}
 
 # Create and start containers
 [group("docker")]
@@ -115,13 +115,13 @@ ps *args='':
 [private]
 [group("lnd")]
 lnd-exec container_name +command:
-  docker exec -t {{container_name}} lncli --lnddir=/home/lnd/.lnd --network=regtest --no-macaroons {{command}}
+  @docker exec -t {{container_name}} lncli --lnddir=/home/lnd/.lnd --network=regtest --no-macaroons {{command}}
 
 # Execute a lightning-cli command (CLN)
 [private]
 [group("cln")]
 cln-exec container_name +command:
-  docker exec -t {{container_name}} lightning-cli --lightning-dir=/home/clightning/.lightning --regtest {{command}}
+  @docker exec -t {{container_name}} lightning-cli --lightning-dir=/home/clightning/.lightning --regtest {{command}}
 
 [private]
 [group("cln")]
@@ -301,6 +301,7 @@ init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 128
   @just cln0-listchannels
+  @just cln-exec {{cln0_container_name}} createrune
 
 # Initialize setup; setup lightning infra and ebill data
 [group("setup")]
@@ -315,3 +316,6 @@ info:
   @just bitcoin::info
   @echo "## cln0"
   @echo "cln0 container name: {{cln0_container_name}}"
+  @echo "cln0 rest endpoint: https://localhost:13010"
+  @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
+  @just cln-exec {{cln0_container_name}} showrunes
