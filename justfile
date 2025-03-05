@@ -11,8 +11,10 @@ project_dir := justfile_directory()
 cln0_container_name := 'regtest_cln0_app'
 cln1_container_name := 'regtest_cln1_alice'
 cln1_lightning_port := '19846'
-lnd0_container_name := 'regtest_lnd0_bob'
-lnd0_lightning_port := '9735'
+cln2_container_name := 'regtest_cln2_bob'
+cln2_lightning_port := '19846'
+lnd6_container_name := 'regtest_lnd6_farid'
+lnd6_lightning_port := '9735'
 
 # print available targets
 [group("project-agnostic")]
@@ -108,3 +110,208 @@ logs *args='':
 [group("docker")]
 ps *args='':
   @just docker-exec ps {{args}}
+
+# Execute a lncli-cli command (LND)
+[private]
+[group("lnd")]
+lnd-exec container_name +command:
+  docker exec -t {{container_name}} lncli --lnddir=/home/lnd/.lnd --network=regtest --no-macaroons {{command}}
+
+# Execute a lightning-cli command (CLN)
+[private]
+[group("cln")]
+cln-exec container_name +command:
+  docker exec -t {{container_name}} lightning-cli --lightning-dir=/home/clightning/.lightning --regtest {{command}}
+
+[private]
+[group("cln")]
+cln-newaddr container_name:
+  @just cln-exec {{container_name}} --json newaddr | jq --raw-output .bech32
+
+[private]
+[group("cln")]
+cln-connect container_name id host port:
+  @just cln-exec {{container_name}} --keywords connect "id"={{id}} "host"={{host}} "port"={{port}}
+
+# Execute a command on instance "cln0"
+[group("cln0")]
+cln0-exec +command:
+  @just cln-exec {{cln0_container_name}} {{command}}
+
+# Execute a command on instance "cln1"
+[group("cln1")]
+cln1-exec +command:
+  @just cln-exec {{cln1_container_name}} {{command}}
+
+# Execute a command on instance "lnd6"
+[group("lnd6")]
+lnd6-exec +command:
+  @just lnd-exec {{lnd6_container_name}} {{command}}
+
+[group("cln1")]
+cln1-id:
+  @just cln-exec {{cln1_container_name}} --json getinfo | jq --raw-output .id
+
+[group("cln2")]
+cln2-id:
+  @just cln-exec {{cln2_container_name}} --json getinfo | jq --raw-output .id
+
+[group("lnd6")]
+lnd6-id:
+  @just lnd6-exec getinfo | jq --raw-output .identity_pubkey
+
+[private]
+[group("cln0")]
+cln0-connect id host port:
+  @just cln-connect {{cln0_container_name}} {{id}} {{host}} {{port}}
+
+[private]
+[group("cln0")]
+cln0-connect-cln1:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-connect {{cln0_container_name}} $(just cln1-id) {{cln1_container_name}} {{cln1_lightning_port}}
+
+[private]
+[group("cln0")]
+cln0-connect-cln2:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-connect {{cln0_container_name}} $(just cln2-id) {{cln2_container_name}} {{cln2_lightning_port}}
+
+[private]
+[group("cln0")]
+cln0-connect-lnd6:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-connect {{cln0_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
+
+[private]
+[group("cln0")]
+cln0-fundchannel-cln1 amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln0-exec --keywords fundchannel "id"=$(just cln1-id) "amount"={{amount_sat}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+
+[private]
+[group("cln0")]
+cln0-fundchannel-lnd6 amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln0-exec --keywords fundchannel "id"=$(just lnd6-id) "amount"={{amount_sat}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+
+[group("cln0")]
+cln0-help:
+  @just cln0-exec help
+
+[group("cln0")]
+cln0-getinfo:
+  @just cln0-exec getinfo
+
+[private]
+[group("cln0")]
+cln0-create-invoice amount_msat='1000' label=uuid() description=uuid():
+  @just cln0-exec --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}}
+
+[group("cln0")]
+cln0-invoice amount_msat='1000':
+  @just cln0-create-invoice {{amount_msat}} | jq --raw-output .bolt11
+
+[group("cln0")]
+cln0-listinvoices:
+  @just cln0-exec listinvoices
+
+[group("cln0")]
+cln0-listbalances:
+  @just cln0-exec bkpr-listbalances
+
+[group("lnd6")]
+lnd6-getinfo:
+  @just lnd6-exec getinfo
+
+[group("cln0")]
+cln0-listchannels:
+  @just cln0-exec listchannels
+
+[private]
+[group("cln0")]
+cln0-waitblockheight blockheight timeout='5':
+  @just cln0-exec --keywords waitblockheight "blockheight"={{blockheight}} "timeout"={{timeout}}
+
+[group("cln0")]
+cln0-listpeers:
+  @just cln0-exec listpeers
+
+# Generate a new on-chain address of the internal wallet
+[group("cln0")]
+cln0-newaddr:
+  @just cln-newaddr {{cln0_container_name}}
+
+# Send funds on-chain from the internal wallet
+[group("cln0")]
+cln0-sendtx destination amount_sat='21000' *args='':
+  @just cln0-exec --keywords withdraw "destination"={{destination}} "satoshi"={{amount_sat}} {{args}}
+
+# Show all funds currently managed
+[group("cln0")]
+cln0-listfunds spent='false':
+  @just cln0-exec --keywords --json listfunds "spent"={{spent}}
+
+[private]
+[group("setup")]
+setup-fund-cln0:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just bitcoin::mine 1 $(just cln-newaddr {{cln0_container_name}})
+
+[private]
+[group("setup")]
+setup-fund-wallets:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just bitcoin::mine 2 $(just cln-newaddr {{cln0_container_name}})
+  just bitcoin::mine 1 $(just cln-newaddr {{cln1_container_name}})
+  just bitcoin::mine 1 $(just cln-newaddr {{cln2_container_name}})
+
+[private]
+[group("setup")]
+setup-connect-peers:
+  @just cln0-connect-cln1
+  @just cln0-connect-cln2
+  #@just cln0-connect-lnd6
+
+# Initialize lightning; fund wallets, connect peers and create channels
+[private]
+[group("setup")]
+init-lightning:
+  @just bitcoin::mine 1
+  @just cln0-waitblockheight 1
+  @just setup-fund-wallets # mines 4 blocks; afterwards blockheight := 5
+  @just bitcoin::mine 100
+  @just cln0-waitblockheight 105
+  @just setup-connect-peers
+  @just cln0-fundchannel-cln1
+  @just bitcoin::mine 6
+  @just cln0-waitblockheight 111
+  #@just cln0-fundchannel-lnd6
+  @just bitcoin::mine 6
+  @just cln0-waitblockheight 117
+  @just bitcoin::mine 10
+  @just cln0-waitblockheight 127
+  @just bitcoin::mine 1
+  @just cln0-waitblockheight 128
+  @just cln0-listchannels
+
+# Initialize setup; setup lightning infra and ebill data
+[group("setup")]
+init: check-deps
+  @just init-lightning
+
+# Initialize setup; setup lightning infra and ebill data
+[group("info")]
+info:
+  @echo "# lightning-regtest-setup-devel"
+  @echo "## bitcoin"
+  @just bitcoin::info
+  @echo "## cln0"
+  @echo "cln0 container name: {{cln0_container_name}}"
