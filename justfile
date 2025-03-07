@@ -331,5 +331,14 @@ info:
   @echo "cln0 container name: {{cln0_container_name}}"
   @echo "cln0 rest endpoint: https://localhost:13010"
   @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
-  @just cln-exec {{cln0_container_name}} getinfo
-  @just cln-exec {{cln0_container_name}} showrunes
+  @echo "cln0 getinfo:"
+  @just cln-exec {{cln0_container_name}} getinfo | jq
+  @echo "cln0 showrunes:"
+  @just cln-exec {{cln0_container_name}} showrunes | jq
+  @echo "## lnd6"
+  @echo "lnd6 container name: {{lnd6_container_name}}"
+  @echo "lnd6 rest endpoint: https://localhost:19841"
+  @echo "lnd6 getinfo:"
+  #@just lnd-exec {{lnd6_container_name}} getinfo | jq
+  @curl --silent --insecure https://localhost:19841/v1/getinfo \
+    | jq '{version, commit_hash, identity_pubkey, alias, num_pending_channels, num_active_channels, num_inactive_channels, num_peers, block_height, block_hash, chains}'
