@@ -153,6 +153,11 @@ cln-connect container_name id host port:
   @just cln-exec {{container_name}} --keywords connect "id"={{id}} "host"={{host}} "port"={{port}}
 
 [private]
+[group("cln")]
+cln-create-invoice container_name amount_msat='1000' label=uuid() description=uuid():
+  @just cln-exec {{container_name}} --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}}
+
+[private]
 [group("cln0")]
 cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
   just cln-exec {{container_name}} --keywords fundchannel "id"={{id}} "amount"={{amount_sat}} "feerate"={{feerate}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
@@ -167,18 +172,22 @@ cln0-exec +command:
 lnd6-exec +command:
   @just lnd-exec {{lnd6_container_name}} {{command}}
 
+[private]
 [group("cln1")]
 cln1-id:
   @just cln-id {{cln1_container_name}}
 
+[private]
 [group("cln2")]
 cln2-id:
   @just cln-id {{cln2_container_name}}
 
+[private]
 [group("cln3")]
 cln3-id:
   @just cln-id {{cln3_container_name}}
 
+[private]
 [group("lnd6")]
 lnd6-id:
   @just lnd-id {{lnd6_container_name}}
@@ -252,14 +261,9 @@ cln0-help:
 cln0-getinfo:
   @just cln0-exec getinfo
 
-[private]
 [group("cln0")]
-cln0-create-invoice amount_msat='1000' label=uuid() description=uuid():
-  @just cln0-exec --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}}
-
-[group("cln0")]
-cln0-invoice amount_msat='1000':
-  @just cln0-create-invoice {{amount_msat}} | jq --raw-output .bolt11
+cln0-invoice amount_msat='1000' label=uuid():
+  @just cln-create-invoice {{cln0_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
 
 [group("cln0")]
 cln0-listinvoices:
@@ -328,6 +332,22 @@ setup-create-channels:
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
   @just cln2-fundchannel-cln3
+
+
+# Send payments back and forth from cln0<->cln3
+[group("health")]
+probe-payment:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  just cln-exec {{cln3_container_name}} pay "${INVOICE0_BOLT11}"
+  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE0_LABEL}"
+
+  INVOICE1_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE1_BOLT11=$(just cln-create-invoice {{cln3_container_name}} 1 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
+  just cln-exec {{cln0_container_name}} pay "${INVOICE1_BOLT11}"
+  just cln-exec {{cln3_container_name}} waitinvoice "${INVOICE1_LABEL}"
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
