@@ -134,8 +134,8 @@ services:
       - "13010:3010"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 20
 
   cln1_alice:
     container_name: regtest_cln1_alice
@@ -185,8 +185,8 @@ services:
       - "19936:19846"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
   cln2_bob:
     container_name: regtest_cln2_bob
@@ -239,8 +239,8 @@ services:
       - "19937:19846"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
   cln3_charlie:
     container_name: regtest_cln3_charlie
@@ -290,8 +290,8 @@ services:
       - "19938:19846"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
   cln4_dave:
     container_name: regtest_cln4_dave
@@ -340,8 +340,8 @@ services:
       - "19939:19846"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
   cln5_erin:
     container_name: regtest_cln5_erin
@@ -390,8 +390,8 @@ services:
       - "19940:19846"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
   lnd6_farid:
     container_name: regtest_lnd6_farid
@@ -436,8 +436,8 @@ services:
       - "19941:10009"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lncli", "--network=regtest", "--no-macaroons", "getinfo" ]
-      interval: 10s
-      retries: 5
+      interval: 5s
+      retries: 10
 
 volumes:
   bitcoind-data:

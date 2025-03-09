@@ -130,6 +130,11 @@ lnd-newaddr container_name address_type='p2wkh':
 lnd-id container_name:
   @just lnd-exec {{container_name}} getinfo | jq --raw-output .identity_pubkey
 
+[private]
+[group("lnd")]
+lnd-openchannel container_name id amount_sat='1000000' push_sat='500000':
+  @just lnd-exec {{container_name}} openchannel --node_key {{id}} --local_amt {{amount_sat}} --push_amt {{push_sat}}
+
 # Execute a lightning-cli command (CLN)
 [private]
 [group("cln")]
@@ -157,9 +162,9 @@ cln-create-invoice container_name amount_msat='1000' label=uuid() description=uu
   @just cln-exec {{container_name}} --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}}
 
 [private]
-[group("cln0")]
+[group("cln")]
 cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
-  just cln-exec {{container_name}} --keywords fundchannel "id"={{id}} "amount"={{amount_sat}} "feerate"={{feerate}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+  @just cln-exec {{container_name}} --keywords fundchannel "id"={{id}} "amount"={{amount_sat}} "feerate"={{feerate}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
 
 # Execute a command on instance "cln0"
 [group("cln0")]
@@ -190,6 +195,11 @@ cln2-id:
 [group("cln3")]
 cln3-id:
   @just cln-id {{cln3_container_name}}
+
+[private]
+[group("cln5")]
+cln5-id:
+  @just cln-id {{cln5_container_name}}
 
 [private]
 [group("lnd6")]
@@ -251,11 +261,11 @@ cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='
   just cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
-[group("cln3")]
-cln3-fundchannel-lnd6 amount_sat='4194303' feerate='1' announce='true' minconf='6' push_msat='2097151500':
+[group("lnd6")]
+lnd6-fundchannel-cln3 amount_sat='4194303' push_sat='2097151':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-fundchannel {{cln3_container_name}} $(just lnd6-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+  just lnd-openchannel {{lnd6_container_name}} $(just cln3-id) {{amount_sat}} {{push_sat}}
 
 [group("cln0")]
 cln0-help:
@@ -336,7 +346,7 @@ setup-create-channels:
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
   @just cln2-fundchannel-cln3
-  @just cln3-fundchannel-lnd6
+  @just lnd6-fundchannel-cln3
 
 # Send payments back and forth between cln1<->cln3 and cln0<->lnd6
 [group("health")]
@@ -375,7 +385,6 @@ init-lightning:
   @just setup-create-channels
   @just bitcoin::mine 6
   @just cln0-waitblockheight 115
-  #@just cln0-fundchannel-lnd6
   @just bitcoin::mine 6
   @just cln0-waitblockheight 121
   @just bitcoin::mine 10

@@ -78,7 +78,7 @@ flowchart TB
    app -->|16_777_215 sat| alice
    app -->|8_388_607 sat| bob
    bob -->|4_194_303 sat| charlie
-   charlie -->|4_194_303 sat| farid
+   farid -->|4_194_303 sat| charlie
    charlie -. private 2_097_151 sat .-> erin
    app ~~~ dave
    alice ~~~ dave
