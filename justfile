@@ -13,6 +13,9 @@ cln1_container_name := 'regtest_cln1_alice'
 cln1_lightning_port := '19846'
 cln2_container_name := 'regtest_cln2_bob'
 cln2_lightning_port := '19846'
+cln3_container_name := 'regtest_cln3_charlie'
+cln4_container_name := 'regtest_cln4_dave'
+cln5_container_name := 'regtest_cln5_erin'
 lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
 
@@ -116,6 +119,11 @@ ps *args='':
 [group("lnd")]
 lnd-exec container_name +command:
   @docker exec -t {{container_name}} lncli --lnddir=/home/lnd/.lnd --network=regtest --no-macaroons {{command}}
+
+[private]
+[group("lnd")]
+lnd-newaddr container_name address_type='p2wkh':
+  @just lnd-exec {{container_name}} newaddress {{address_type}} | jq --raw-output .address
 
 # Execute a lightning-cli command (CLN)
 [private]
@@ -284,6 +292,10 @@ setup-fund-wallets:
   just bitcoin::mine 2 $(just cln-newaddr {{cln0_container_name}})
   just bitcoin::mine 1 $(just cln-newaddr {{cln1_container_name}})
   just bitcoin::mine 1 $(just cln-newaddr {{cln2_container_name}})
+  just bitcoin::mine 1 $(just cln-newaddr {{cln3_container_name}})
+  just bitcoin::mine 1 $(just cln-newaddr {{cln4_container_name}})
+  just bitcoin::mine 1 $(just cln-newaddr {{cln5_container_name}})
+  just bitcoin::mine 1 $(just lnd-newaddr {{lnd6_container_name}})
 
 [private]
 [group("setup")]
@@ -298,21 +310,21 @@ setup-connect-peers:
 init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 1
-  @just setup-fund-wallets # mines 4 blocks; afterwards blockheight := 5
+  @just setup-fund-wallets # mines 8 blocks; afterwards blockheight := 5
   @just bitcoin::mine 100
-  @just cln0-waitblockheight 105
+  @just cln0-waitblockheight 109
   @just setup-connect-peers
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 111
+  @just cln0-waitblockheight 115
   #@just cln0-fundchannel-lnd6
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 117
+  @just cln0-waitblockheight 121
   @just bitcoin::mine 10
-  @just cln0-waitblockheight 127
+  @just cln0-waitblockheight 131
   @just bitcoin::mine 1
-  @just cln0-waitblockheight 128
+  @just cln0-waitblockheight 132
   @just cln0-listchannels
   @just cln-exec {{cln0_container_name}} createrune
 
