@@ -279,13 +279,6 @@ cln0-listfunds spent='false':
 
 [private]
 [group("setup")]
-setup-fund-cln0:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  just bitcoin::mine 1 $(just cln-newaddr {{cln0_container_name}})
-
-[private]
-[group("setup")]
 setup-fund-wallets:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -304,6 +297,12 @@ setup-connect-peers:
   @just cln0-connect-cln2
   #@just cln0-connect-lnd6
 
+[private]
+[group("setup")]
+setup-create-channels:
+  @just cln0-fundchannel-cln1
+  @just cln0-fundchannel-cln2
+
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
 [group("setup")]
@@ -314,8 +313,7 @@ init-lightning:
   @just bitcoin::mine 100
   @just cln0-waitblockheight 109
   @just setup-connect-peers
-  @just cln0-fundchannel-cln1
-  @just cln0-fundchannel-cln2
+  @just setup-create-channels
   @just bitcoin::mine 6
   @just cln0-waitblockheight 115
   #@just cln0-fundchannel-lnd6
