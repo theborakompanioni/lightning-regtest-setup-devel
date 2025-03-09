@@ -68,10 +68,17 @@ A user lightning node with a direct channel to Charlie.
 ### Channels
 ```mermaid
 flowchart TB
+   app["app (cln0)"]
+   alice["alice (cln1)"]
+   bob["bob (cln2)"]
+   charlie["charlie (cln3)"]
+   dave["dave (cln4)"]
+   erin["erin (cln5)"]
+   farid["farid (lnd6)"]
    app -->|16_777_215 sat| alice
    app -->|8_388_607 sat| bob
    bob -->|4_194_303 sat| charlie
-   farid -->|4_194_303 sat| charlie
+   charlie -->|4_194_303 sat| farid
    charlie -. private 2_097_151 sat .-> erin
    app ~~~ dave
    alice ~~~ dave
