@@ -135,7 +135,7 @@ services:
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
       interval: 5s
-      retries: 20
+      retries: 60
 
   cln1_alice:
     container_name: regtest_cln1_alice

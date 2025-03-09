@@ -164,8 +164,8 @@ cln-connect container_name id host port:
 
 [private]
 [group("cln")]
-cln-create-invoice container_name amount_msat='1000' label=uuid() description=uuid():
-  @just cln-exec {{container_name}} --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}}
+cln-create-invoice container_name amount_msat='1000' label=uuid() description=uuid() *args='':
+  @just cln-exec {{container_name}} --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}} {{args}}
 
 [private]
 [group("cln")]
@@ -370,23 +370,23 @@ setup-create-channels:
   @just cln3-fundchannel-cln5
   @just lnd6-fundchannel-cln3
 
-# Send payments back and forth between cln0<->cln3 and cln1<->lnd6
+# Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
 probe-payment:
   #!/usr/bin/env bash
   set -euxo pipefail
-  # cln0<->cln3
-  ## cln3->cln0
+  # cln0<->cln5
+  ## cln0->cln5
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
-  just cln-exec {{cln3_container_name}} pay "${INVOICE0_BOLT11}"
-  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE0_LABEL}"
-  ## cln0->cln3
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln5_container_name}} 1000 "${INVOICE0_LABEL}"  "exposeprivatechannels"="true" | jq --raw-output .bolt11)
+  just cln-exec {{cln0_container_name}} pay "${INVOICE0_BOLT11}"
+  just cln-exec {{cln5_container_name}} waitinvoice "${INVOICE0_LABEL}"
+  ## cln5->cln0
   INVOICE1_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE1_BOLT11=$(just cln-create-invoice {{cln3_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
-  just cln-exec {{cln0_container_name}} pay "${INVOICE1_BOLT11}"
-  just cln-exec {{cln3_container_name}} waitinvoice "${INVOICE1_LABEL}"
-  echo "HEALTHCHECK SUCCESS (cln0<->cln3)."
+  INVOICE1_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
+  just cln-exec {{cln5_container_name}} pay "${INVOICE1_BOLT11}"
+  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
+  echo "HEALTHCHECK SUCCESS (cln0<->cln5)."
 
   # cln1<->lnd6
   ## lnd6->cln1
