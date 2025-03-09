@@ -167,6 +167,11 @@ cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='tru
 cln0-exec +command:
   @just cln-exec {{cln0_container_name}} {{command}}
 
+[private]
+[group("cln3")]
+cln3-exec +command:
+  @just cln-exec {{cln3_container_name}} {{command}}
+
 # Execute a command on instance "lnd6"
 [group("lnd6")]
 lnd6-exec +command:
@@ -212,18 +217,18 @@ cln0-connect-cln2:
   just cln-connect {{cln0_container_name}} $(just cln2-id) {{cln2_container_name}} {{cln2_lightning_port}}
 
 [private]
-[group("cln0")]
+[group("cln2")]
 cln2-connect-cln3:
   #!/usr/bin/env bash
   set -euxo pipefail
   just cln-connect {{cln2_container_name}} $(just cln3-id) {{cln3_container_name}} {{cln3_lightning_port}}
 
 [private]
-[group("cln0")]
-cln0-connect-lnd6:
+[group("cln3")]
+cln3-connect-lnd6:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln0_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
+  just cln-connect {{cln3_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
 
 [private]
 [group("cln0")]
@@ -247,11 +252,11 @@ cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='
   just cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
-[group("cln0")]
-cln0-fundchannel-lnd6 amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
+[group("cln3")]
+cln3-fundchannel-lnd6 amount_sat='4194303' feerate='1' announce='true' minconf='6' push_msat='2097151500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln0-exec --keywords fundchannel "id"=$(just lnd6-id) "amount"={{amount_sat}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
+  just cln-fundchannel {{cln3_container_name}} $(just lnd6-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [group("cln0")]
 cln0-help:
@@ -324,7 +329,7 @@ setup-connect-peers:
   @just cln0-connect-cln1
   @just cln0-connect-cln2
   @just cln2-connect-cln3
-  #@just cln0-connect-lnd6
+  @just cln3-connect-lnd6
 
 [private]
 [group("setup")]
@@ -332,22 +337,31 @@ setup-create-channels:
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
   @just cln2-fundchannel-cln3
+  @just cln3-fundchannel-lnd6
 
-
-# Send payments back and forth from cln0<->cln3
+# Send payments back and forth between cln1<->cln3 and cln0<->lnd6
 [group("health")]
 probe-payment:
   #!/usr/bin/env bash
   set -euxo pipefail
+  # cln1<->cln3
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
   just cln-exec {{cln3_container_name}} pay "${INVOICE0_BOLT11}"
-  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE0_LABEL}"
+  just cln-exec {{cln1_container_name}} waitinvoice "${INVOICE0_LABEL}"
 
   INVOICE1_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE1_BOLT11=$(just cln-create-invoice {{cln3_container_name}} 1 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
-  just cln-exec {{cln0_container_name}} pay "${INVOICE1_BOLT11}"
+  INVOICE1_BOLT11=$(just cln-create-invoice {{cln3_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
+  just cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   just cln-exec {{cln3_container_name}} waitinvoice "${INVOICE1_LABEL}"
+  echo "HEALTHCHECK SUCCESS (cln1<->cln3)."
+
+  # cln0<->lnd6
+  INVOICE2_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE2_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE2_LABEL}" | jq --raw-output .bolt11)
+  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE2_BOLT11}"
+  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE2_LABEL}"
+  echo "HEALTHCHECK SUCCESS (cln0<->lnd6)."
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
