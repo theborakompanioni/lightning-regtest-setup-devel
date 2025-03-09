@@ -72,7 +72,7 @@ services:
 
   cln0_app:
     container_name: regtest_cln0_app
-    image: polarlightning/clightning:24.08.1
+    image: polarlightning/clightning:24.11.1@sha256:36bdb7d1826b23264863905a85ae93e24548a4db6979420a1cac69e905f4a316
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -101,6 +101,7 @@ services:
       - '--bitcoin-rpcport=18443'
       - '--bitcoin-rpcuser=app'
       - '--bitcoin-rpcpassword=app'
+      - '--grpc-host=0.0.0.0'
       - '--grpc-port=19935'
       - '--clnrest-host=0.0.0.0'
       - '--clnrest-port=3010'
@@ -138,7 +139,7 @@ services:
 
   cln1_alice:
     container_name: regtest_cln1_alice
-    image: polarlightning/clightning:24.11.1
+    image: polarlightning/clightning:24.11.1@sha256:36bdb7d1826b23264863905a85ae93e24548a4db6979420a1cac69e905f4a316
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -192,7 +193,7 @@ services:
     #image: polarlightning/clightning:24.08.1
     # An LND instance will connect to this node and does not like version >v23.11.2
     # Always fails with "peer ${pubkey} is not online" (last checked: 2024-10-10)
-    image: polarlightning/clightning:23.11.2
+    image: polarlightning/clightning:23.11.2@sha256:102916c20bf1397b450ca517dbc0569824fb10e03d63c452328b4ff444817a51
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -243,7 +244,7 @@ services:
 
   cln3_charlie:
     container_name: regtest_cln3_charlie
-    image: polarlightning/clightning:24.11.1
+    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -260,7 +261,7 @@ services:
       - '--bitcoin-rpcport=18443'
       - '--bitcoin-rpcuser=charlie'
       - '--bitcoin-rpcpassword=charlie'
-      - '--grpc-host=0.0.0.0'
+      #- '--grpc-host=0.0.0.0' <- only support in v24.11.1
       - '--grpc-port=19935'
       - '--network=regtest'
       - '--log-level=debug'
@@ -294,7 +295,7 @@ services:
 
   cln4_dave:
     container_name: regtest_cln4_dave
-    image: polarlightning/clightning:24.08.1
+    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -344,7 +345,7 @@ services:
 
   cln5_erin:
     container_name: regtest_cln5_erin
-    image: polarlightning/clightning:24.08.1
+    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -394,7 +395,7 @@ services:
 
   lnd6_farid:
     container_name: regtest_lnd6_farid
-    image: polarlightning/lnd:0.18.2-beta
+    image: polarlightning/lnd:0.18.5-beta@sha256:9afcfd14b2eef3461cf89dbe77e4ec61f55df09cce23d16006fabf8f9eb69c55
     restart: unless-stopped
     depends_on:
       bitcoind:

@@ -92,7 +92,6 @@ down *args='':
 # Stop and remove containers, networks and volumes
 [group("docker")]
 clean:
-  rm --force ./.docker_data/bitcredit_wallet/bills_keys/*.json
   @just down --remove-orphans --volumes
 
 # Build or rebuild services
