@@ -17,6 +17,7 @@ cln3_container_name := 'regtest_cln3_charlie'
 cln3_lightning_port := '19846'
 cln4_container_name := 'regtest_cln4_dave'
 cln5_container_name := 'regtest_cln5_erin'
+cln5_lightning_port := '19846'
 lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
 
@@ -234,6 +235,13 @@ cln2-connect-cln3:
 
 [private]
 [group("cln3")]
+cln3-connect-cln5:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-connect {{cln3_container_name}} $(just cln5-id) {{cln5_container_name}} {{cln5_lightning_port}}
+
+[private]
+[group("cln3")]
 cln3-connect-lnd6:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -259,6 +267,13 @@ cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='
   #!/usr/bin/env bash
   set -euxo pipefail
   just cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+
+[private]
+[group("cln3")]
+cln3-fundchannel-cln5 amount_sat='2097151' feerate='1' announce='false' minconf='6' push_msat='1048575500':
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-fundchannel {{cln3_container_name}} $(just cln5-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("lnd6")]
@@ -338,6 +353,7 @@ setup-connect-peers:
   @just cln0-connect-cln1
   @just cln0-connect-cln2
   @just cln2-connect-cln3
+  @just cln3-connect-cln5
   @just cln3-connect-lnd6
 
 [private]
@@ -346,6 +362,7 @@ setup-create-channels:
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
   @just cln2-fundchannel-cln3
+  @just cln3-fundchannel-cln5
   @just lnd6-fundchannel-cln3
 
 # Send payments back and forth between cln1<->cln3 and cln0<->lnd6
