@@ -14,6 +14,7 @@ cln1_lightning_port := '19846'
 cln2_container_name := 'regtest_cln2_bob'
 cln2_lightning_port := '19846'
 cln3_container_name := 'regtest_cln3_charlie'
+cln3_lightning_port := '19846'
 cln4_container_name := 'regtest_cln4_dave'
 cln5_container_name := 'regtest_cln5_erin'
 lnd6_container_name := 'regtest_lnd6_farid'
@@ -125,11 +126,21 @@ lnd-exec container_name +command:
 lnd-newaddr container_name address_type='p2wkh':
   @just lnd-exec {{container_name}} newaddress {{address_type}} | jq --raw-output .address
 
+[private]
+[group("lnd")]
+lnd-id container_name:
+  @just lnd-exec {{container_name}} getinfo | jq --raw-output .identity_pubkey
+
 # Execute a lightning-cli command (CLN)
 [private]
 [group("cln")]
 cln-exec container_name +command:
   @docker exec -t {{container_name}} lightning-cli --lightning-dir=/home/clightning/.lightning --regtest {{command}}
+
+[private]
+[group("cln")]
+cln-id container_name:
+  @just cln-exec {{container_name}} --json getinfo | jq --raw-output .id
 
 [private]
 [group("cln")]
@@ -151,11 +162,6 @@ cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='tru
 cln0-exec +command:
   @just cln-exec {{cln0_container_name}} {{command}}
 
-# Execute a command on instance "cln1"
-[group("cln1")]
-cln1-exec +command:
-  @just cln-exec {{cln1_container_name}} {{command}}
-
 # Execute a command on instance "lnd6"
 [group("lnd6")]
 lnd6-exec +command:
@@ -163,15 +169,19 @@ lnd6-exec +command:
 
 [group("cln1")]
 cln1-id:
-  @just cln-exec {{cln1_container_name}} --json getinfo | jq --raw-output .id
+  @just cln-id {{cln1_container_name}}
 
 [group("cln2")]
 cln2-id:
-  @just cln-exec {{cln2_container_name}} --json getinfo | jq --raw-output .id
+  @just cln-id {{cln2_container_name}}
+
+[group("cln3")]
+cln3-id:
+  @just cln-id {{cln3_container_name}}
 
 [group("lnd6")]
 lnd6-id:
-  @just lnd6-exec getinfo | jq --raw-output .identity_pubkey
+  @just lnd-id {{lnd6_container_name}}
 
 [private]
 [group("cln0")]
@@ -194,6 +204,13 @@ cln0-connect-cln2:
 
 [private]
 [group("cln0")]
+cln2-connect-cln3:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-connect {{cln2_container_name}} $(just cln3-id) {{cln3_container_name}} {{cln3_lightning_port}}
+
+[private]
+[group("cln0")]
 cln0-connect-lnd6:
   #!/usr/bin/env bash
   set -euxo pipefail
@@ -212,6 +229,13 @@ cln0-fundchannel-cln2 amount_sat='8388607' feerate='1' announce='true' minconf='
   #!/usr/bin/env bash
   set -euxo pipefail
   just cln-fundchannel {{cln0_container_name}} $(just cln2-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+
+[private]
+[group("cln2")]
+cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='6' push_msat='2097151500':
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln0")]
@@ -295,6 +319,7 @@ setup-fund-wallets:
 setup-connect-peers:
   @just cln0-connect-cln1
   @just cln0-connect-cln2
+  @just cln2-connect-cln3
   #@just cln0-connect-lnd6
 
 [private]
@@ -302,6 +327,7 @@ setup-connect-peers:
 setup-create-channels:
   @just cln0-fundchannel-cln1
   @just cln0-fundchannel-cln2
+  @just cln2-fundchannel-cln3
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
