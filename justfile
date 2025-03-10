@@ -406,24 +406,25 @@ init: check-deps
 # Initialize setup; setup lightning infra and ebill data
 [group("info")]
 info:
-  @echo "# lightning-regtest-setup-devel"
-  @echo "## bitcoin"
+  @echo "{{BOLD + BLACK + BG_WHITE + UNDERLINE}}# lightning-regtest-setup-devel{{NORMAL}}"
+  @echo "{{BOLD + GREEN + UNDERLINE}}## bitcoin{{NORMAL}}"
   @just bitcoin::info
-  @echo "## cln0"
+  @echo "{{BOLD + MAGENTA + UNDERLINE}}## cln0{{NORMAL}}{{BOLD + MAGENTA}}"
+
   @just cln0-id
-  @echo "cln0 container name: {{cln0_container_name}}"
-  @echo "cln0 rest endpoint: https://localhost:13010"
-  @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
-  @echo "cln0 getinfo:"
+  @echo "{{BOLD + MAGENTA}}cln0 container name:{{NORMAL}} {{cln0_container_name}}"
+  @echo "{{BOLD + MAGENTA}}cln0 rest endpoint:{{NORMAL}} https://localhost:13010"
+  @echo "{{BOLD + MAGENTA}}cln0 swagger ui:{{NORMAL}} https://localhost:13010/swagger-ui"
+  @echo "{{BOLD + MAGENTA}}cln0 getinfo:{{NORMAL}}"
   @just cln::exec {{cln0_container_name}} getinfo | jq \
     | jq '{version, id, alias, num_peers, alias, num_pending_channels, num_active_channels, num_inactive_channels, blockheight, network, fees_collected_msat}'
 
-  @echo "cln0 showrunes:"
+  @echo "{{BOLD + MAGENTA}}cln0 showrunes:{{NORMAL}}"
   @just cln::exec {{cln0_container_name}} showrunes | jq
-  @echo "## lnd6"
+  @echo "{{BOLD + CYAN + UNDERLINE}}## lnd6{{NORMAL}}{{BOLD + CYAN}}"
   @just lnd6-id
-  @echo "lnd6 container name: {{lnd6_container_name}}"
-  @echo "lnd6 rest endpoint: https://localhost:19841"
-  @echo "lnd6 getinfo:"
+  @echo "{{BOLD + CYAN}}lnd6 container name:{{NORMAL}} {{lnd6_container_name}}"
+  @echo "{{BOLD + CYAN}}lnd6 rest endpoint:{{NORMAL}} https://localhost:19841"
+  @echo "{{BOLD + CYAN}}lnd6 getinfo:{{NORMAL}}"
   @curl --silent --insecure https://localhost:19841/v1/getinfo \
     | jq '{version, identity_pubkey, alias, num_peers, num_pending_channels, num_active_channels, num_inactive_channels, block_height, chains}'
