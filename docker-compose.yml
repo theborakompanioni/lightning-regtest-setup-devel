@@ -134,8 +134,11 @@ services:
       - "13010:3010"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
-      interval: 5s
-      retries: 60
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
 
   cln1_alice:
     container_name: regtest_cln1_alice
@@ -436,8 +439,11 @@ services:
       - "19941:10009"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lncli", "--network=regtest", "--no-macaroons", "getinfo" ]
-      interval: 5s
-      retries: 10
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
 
 volumes:
   bitcoind-data:
