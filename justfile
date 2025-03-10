@@ -415,22 +415,6 @@ probe-payment-cln1-lnd6:
   just cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
 
-[private]
-[group("health")]
-probe-payment-cln0-lnd6:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  # cln0<->lnd6
-  ## lnd6->cln0
-  INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
-  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
-  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE0_LABEL}"
-  ## cln0->lnd6
-  INVOICE1_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
-  just cln-exec {{cln0_container_name}} pay "${INVOICE1_BOLT11}"
-  echo "HEALTHCHECK SUCCESS (cln0<->lnd6)."
-
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
 probe-payment:
@@ -438,9 +422,8 @@ probe-payment:
   set -euxo pipefail
   while true; do 
     just probe-payment-cln0-cln5
-    #just probe-payment-cln1-lnd6 <- unreliable atm
-    just probe-payment-cln0-lnd6
-    sleep 1
+    just probe-payment-cln1-lnd6
+    sleep 3
   done
 
 # Initialize lightning; fund wallets, connect peers and create channels
