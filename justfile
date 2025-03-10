@@ -141,6 +141,11 @@ lnd6-connect-cln3:
   just lnd::lnd-exec {{lnd6_container_name}} connect $(just cln3-id)@{{cln3_container_name}}:{{cln3_lightning_port}} --timeout 30s --perm
 
 [private]
+[group("cln0")]
+cln0-id:
+  @just cln::cln-id {{cln0_container_name}}
+
+[private]
 [group("cln1")]
 cln1-id:
   @just cln::cln-id {{cln1_container_name}}
@@ -405,17 +410,20 @@ info:
   @echo "## bitcoin"
   @just bitcoin::info
   @echo "## cln0"
+  @just cln0-id
   @echo "cln0 container name: {{cln0_container_name}}"
   @echo "cln0 rest endpoint: https://localhost:13010"
   @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
   @echo "cln0 getinfo:"
-  @just cln::cln-exec {{cln0_container_name}} getinfo | jq
+  @just cln::cln-exec {{cln0_container_name}} getinfo | jq \
+    | jq '{version, id, alias, num_peers, alias, num_pending_channels, num_active_channels, num_inactive_channels, blockheight, network, fees_collected_msat}'
+
   @echo "cln0 showrunes:"
   @just cln::cln-exec {{cln0_container_name}} showrunes | jq
   @echo "## lnd6"
+  @just lnd6-id
   @echo "lnd6 container name: {{lnd6_container_name}}"
   @echo "lnd6 rest endpoint: https://localhost:19841"
   @echo "lnd6 getinfo:"
-  #@just lnd-exec {{lnd6_container_name}} getinfo | jq
   @curl --silent --insecure https://localhost:19841/v1/getinfo \
-    | jq '{version, commit_hash, identity_pubkey, alias, num_pending_channels, num_active_channels, num_inactive_channels, num_peers, block_height, block_hash, chains}'
+    | jq '{version, identity_pubkey, alias, num_peers, num_pending_channels, num_active_channels, num_inactive_channels, block_height, chains}'
