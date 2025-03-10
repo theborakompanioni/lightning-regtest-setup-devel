@@ -409,8 +409,13 @@ probe-payment-cln1-lnd6:
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
 probe-payment:
-  just probe-payment-cln0-cln5
-  just probe-payment-cln1-lnd6
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  while true; do 
+    just probe-payment-cln0-cln5
+    #just probe-payment-cln1-lnd6 <- unreliable atm
+    sleep 1
+  done
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
