@@ -370,15 +370,16 @@ setup-create-channels:
   @just cln3-fundchannel-cln5
   @just lnd6-fundchannel-cln3
 
-# Send payments back and forth between cln0<->cln5 and cln1<->lnd6
+# Send payments back and forth cln0<->cln5
+[private]
 [group("health")]
-probe-payment:
+probe-payment-cln0-cln5:
   #!/usr/bin/env bash
   set -euxo pipefail
   # cln0<->cln5
   ## cln0->cln5
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln5_container_name}} 1000 "${INVOICE0_LABEL}"  "exposeprivatechannels"="true" | jq --raw-output .bolt11)
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln5_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
   just cln-exec {{cln0_container_name}} pay "${INVOICE0_BOLT11}"
   just cln-exec {{cln5_container_name}} waitinvoice "${INVOICE0_LABEL}"
   ## cln5->cln0
@@ -388,16 +389,28 @@ probe-payment:
   just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
   echo "HEALTHCHECK SUCCESS (cln0<->cln5)."
 
+# Send payments back and forth between cln1<->lnd6
+[private]
+[group("health")]
+probe-payment-cln1-lnd6:
+  #!/usr/bin/env bash
+  set -euxo pipefail
   # cln1<->lnd6
   ## lnd6->cln1
-  INVOICE2_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE2_BOLT11=$(just cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE2_LABEL}" | jq --raw-output .bolt11)
-  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE2_BOLT11}"
-  just cln-exec {{cln1_container_name}} waitinvoice "${INVOICE2_LABEL}"
+  INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
+  just cln-exec {{cln1_container_name}} waitinvoice "${INVOICE0_LABEL}"
   ## cln1->lnd6
-  INVOICE3_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
-  just cln-exec {{cln1_container_name}} pay "${INVOICE3_BOLT11}"
+  INVOICE1_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
+  just cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
+
+# Send payments back and forth between cln0<->cln5 and cln1<->lnd6
+[group("health")]
+probe-payment:
+  just probe-payment-cln0-cln5
+  just probe-payment-cln1-lnd6
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
