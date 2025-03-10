@@ -188,6 +188,14 @@ lnd6-exec +command:
   @just lnd-exec {{lnd6_container_name}} {{command}}
 
 [private]
+[group("lnd6")]
+lnd6-connect-cln3:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just lnd-exec {{lnd6_container_name}} disconnect $(just cln3-id) || :
+  just lnd-exec {{lnd6_container_name}} connect $(just cln3-id)@{{cln3_container_name}}:{{cln3_lightning_port}} --timeout 30s --perm
+
+[private]
 [group("cln1")]
 cln1-id:
   @just cln-id {{cln1_container_name}}
@@ -359,6 +367,7 @@ setup-connect-peers:
   @just cln0-connect-cln2
   @just cln2-connect-cln3
   @just cln3-connect-cln5
+  #@just lnd6-connect-cln3
   @just cln3-connect-lnd6
 
 [private]
@@ -406,6 +415,22 @@ probe-payment-cln1-lnd6:
   just cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
 
+[private]
+[group("health")]
+probe-payment-cln0-lnd6:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  # cln0<->lnd6
+  ## lnd6->cln0
+  INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE0_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
+  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE0_LABEL}"
+  ## cln0->lnd6
+  INVOICE1_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
+  just cln-exec {{cln0_container_name}} pay "${INVOICE1_BOLT11}"
+  echo "HEALTHCHECK SUCCESS (cln0<->lnd6)."
+
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
 probe-payment:
@@ -414,6 +439,7 @@ probe-payment:
   while true; do 
     just probe-payment-cln0-cln5
     #just probe-payment-cln1-lnd6 <- unreliable atm
+    just probe-payment-cln0-lnd6
     sleep 1
   done
 

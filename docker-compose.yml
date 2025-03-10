@@ -31,7 +31,7 @@ services:
       -server=1
       -whitelist=0.0.0.0/0
       -txindex=1
-      -debug=rpc
+      -debug=0
       -dns=0
       -dnsseed=0
       -networkactive=0
@@ -80,15 +80,15 @@ services:
       postgres:
         condition: service_healthy
       cln1_alice:
-        condition: service_started # service_healthy
+        condition: service_healthy
       cln2_bob:
-        condition: service_started # service_healthy
+        condition: service_healthy
       cln3_charlie:
-        condition: service_started # service_healthy
+        condition: service_healthy
       cln4_dave:
-        condition: service_started # service_healthy
+        condition: service_healthy
       cln5_erin:
-        condition: service_started # service_healthy
+        condition: service_healthy
       lnd6_farid:
         condition: service_healthy
     environment:
@@ -149,6 +149,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      cln2_bob:
+        condition: service_healthy
     environment:
       LIGHTNINGD_POSTGRES_NO_VACUUM: 1
     command:
@@ -162,7 +164,7 @@ services:
       - '--grpc-host=0.0.0.0'
       - '--grpc-port=19935'
       - '--network=regtest'
-      - '--log-level=debug'
+      - '--log-level=info'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
       - '--log-file=-' # means to log to stdout also!
       - '--funding-confirms=1'
@@ -203,6 +205,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      cln3_charlie:
+        condition: service_healthy
     environment:
       LIGHTNINGD_POSTGRES_NO_VACUUM: 1
     command:
@@ -215,7 +219,7 @@ services:
       - '--bitcoin-rpcpassword=bob'
       - '--grpc-port=19935'
       - '--network=regtest'
-      - '--log-level=debug'
+      - '--log-level=info'
       - '--log-file=-'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
       - '--funding-confirms=1'
@@ -254,6 +258,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      cln5_erin:
+        condition: service_healthy
     environment:
       LIGHTNINGD_POSTGRES_NO_VACUUM: 1
     command:
@@ -264,10 +270,10 @@ services:
       - '--bitcoin-rpcport=18443'
       - '--bitcoin-rpcuser=charlie'
       - '--bitcoin-rpcpassword=charlie'
-      #- '--grpc-host=0.0.0.0' <- only support in v24.11.1
+      #- '--grpc-host=0.0.0.0' # only supported in >=v24.11.1
       - '--grpc-port=19935'
       - '--network=regtest'
-      - '--log-level=debug'
+      - '--log-level=info'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
       - '--log-file=-' # means to log to stdout also!
       - '--funding-confirms=1'
@@ -317,7 +323,7 @@ services:
       - '--bitcoin-rpcpassword=dave'
       - '--grpc-port=19935'
       - '--network=regtest'
-      - '--log-level=debug'
+      - '--log-level=info'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
       - '--log-file=-' # means to log to stdout also!
       - '--funding-confirms=1'
@@ -367,7 +373,7 @@ services:
       - '--bitcoin-rpcpassword=erin'
       - '--grpc-port=19935'
       - '--network=regtest'
-      - '--log-level=debug'
+      - '--log-level=info'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
       - '--log-file=-' # means to log to stdout also!
       - '--funding-confirms=1'
@@ -405,6 +411,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      cln3_charlie:
+        condition: service_healthy
     command:
       - '--alias=lnd6_farid'
       - '--bitcoin.active'
@@ -424,6 +432,7 @@ services:
       - '--rpclisten=regtest_lnd6_farid:10009'
       - '--rpclisten=localhost:10009' # needed for healthcheck
       - '--tlscertduration=876000h'
+      #- '--debuglevel=info'
       - '--debuglevel=debug'
       - '--maxpendingchannels=21'
       - '--trickledelay=1000'
