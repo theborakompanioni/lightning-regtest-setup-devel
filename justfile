@@ -1,6 +1,7 @@
 # This justfile requires https://github.com/casey/just
 
 mod bitcoin
+mod cln
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -141,46 +142,15 @@ lnd-openchannel container_name id amount_sat='1000000' push_sat='500000':
 lnd-create-invoice container_name amount_msat='1000':
   @just lnd-exec {{container_name}} addinvoice --amt_msat {{amount_msat}}
 
-# Execute a lightning-cli command (CLN)
-[private]
-[group("cln")]
-cln-exec container_name +command:
-  @docker exec -t {{container_name}} lightning-cli --lightning-dir=/home/clightning/.lightning --regtest {{command}}
-
-[private]
-[group("cln")]
-cln-id container_name:
-  @just cln-exec {{container_name}} --json getinfo | jq --raw-output .id
-
-[private]
-[group("cln")]
-cln-newaddr container_name:
-  @just cln-exec {{container_name}} --json newaddr | jq --raw-output .bech32
-
-[private]
-[group("cln")]
-cln-connect container_name id host port:
-  @just cln-exec {{container_name}} --keywords connect "id"={{id}} "host"={{host}} "port"={{port}}
-
-[private]
-[group("cln")]
-cln-create-invoice container_name amount_msat='1000' label=uuid() description=uuid() *args='':
-  @just cln-exec {{container_name}} --keywords invoice "amount_msat"={{amount_msat}} "label"={{label}} "description"={{description}} {{args}}
-
-[private]
-[group("cln")]
-cln-fundchannel container_name id amount_sat='1000000' feerate='1' announce='true' minconf='6' push_msat='500000000':
-  @just cln-exec {{container_name}} --keywords fundchannel "id"={{id}} "amount"={{amount_sat}} "feerate"={{feerate}} "announce"={{announce}} "minconf"={{minconf}} "push_msat"={{push_msat}} "mindepth"="0"
-
 # Execute a command on instance "cln0"
 [group("cln0")]
 cln0-exec +command:
-  @just cln-exec {{cln0_container_name}} {{command}}
+  @just cln::cln-exec {{cln0_container_name}} {{command}}
 
 [private]
 [group("cln3")]
 cln3-exec +command:
-  @just cln-exec {{cln3_container_name}} {{command}}
+  @just cln::cln-exec {{cln3_container_name}} {{command}}
 
 # Execute a command on instance "lnd6"
 [group("lnd6")]
@@ -198,22 +168,22 @@ lnd6-connect-cln3:
 [private]
 [group("cln1")]
 cln1-id:
-  @just cln-id {{cln1_container_name}}
+  @just cln::cln-id {{cln1_container_name}}
 
 [private]
 [group("cln2")]
 cln2-id:
-  @just cln-id {{cln2_container_name}}
+  @just cln::cln-id {{cln2_container_name}}
 
 [private]
 [group("cln3")]
 cln3-id:
-  @just cln-id {{cln3_container_name}}
+  @just cln::cln-id {{cln3_container_name}}
 
 [private]
 [group("cln5")]
 cln5-id:
-  @just cln-id {{cln5_container_name}}
+  @just cln::cln-id {{cln5_container_name}}
 
 [private]
 [group("lnd6")]
@@ -223,70 +193,70 @@ lnd6-id:
 [private]
 [group("cln0")]
 cln0-connect id host port:
-  @just cln-connect {{cln0_container_name}} {{id}} {{host}} {{port}}
+  @just cln::cln-connect {{cln0_container_name}} {{id}} {{host}} {{port}}
 
 [private]
 [group("cln0")]
 cln0-connect-cln1:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln0_container_name}} $(just cln1-id) {{cln1_container_name}} {{cln1_lightning_port}}
+  just cln::cln-connect {{cln0_container_name}} $(just cln1-id) {{cln1_container_name}} {{cln1_lightning_port}}
 
 [private]
 [group("cln0")]
 cln0-connect-cln2:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln0_container_name}} $(just cln2-id) {{cln2_container_name}} {{cln2_lightning_port}}
+  just cln::cln-connect {{cln0_container_name}} $(just cln2-id) {{cln2_container_name}} {{cln2_lightning_port}}
 
 [private]
 [group("cln2")]
 cln2-connect-cln3:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln2_container_name}} $(just cln3-id) {{cln3_container_name}} {{cln3_lightning_port}}
+  just cln::cln-connect {{cln2_container_name}} $(just cln3-id) {{cln3_container_name}} {{cln3_lightning_port}}
 
 [private]
 [group("cln3")]
 cln3-connect-cln5:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln3_container_name}} $(just cln5-id) {{cln5_container_name}} {{cln5_lightning_port}}
+  just cln::cln-connect {{cln3_container_name}} $(just cln5-id) {{cln5_container_name}} {{cln5_lightning_port}}
 
 [private]
 [group("cln3")]
 cln3-connect-lnd6:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-connect {{cln3_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
+  just cln::cln-connect {{cln3_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
 
 [private]
 [group("cln0")]
 cln0-fundchannel-cln1 amount_sat='16777215' feerate='1' announce='true' minconf='6' push_msat='8388607500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-fundchannel {{cln0_container_name}} $(just cln1-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+  just cln::cln-fundchannel {{cln0_container_name}} $(just cln1-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln0")]
 cln0-fundchannel-cln2 amount_sat='8388607' feerate='1' announce='true' minconf='6' push_msat='4194303500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-fundchannel {{cln0_container_name}} $(just cln2-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+  just cln::cln-fundchannel {{cln0_container_name}} $(just cln2-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln2")]
 cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='6' push_msat='2097151500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+  just cln::cln-fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln3")]
 cln3-fundchannel-cln5 amount_sat='2097151' feerate='1' announce='false' minconf='6' push_msat='1048575500':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just cln-fundchannel {{cln3_container_name}} $(just cln5-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
+  just cln::cln-fundchannel {{cln3_container_name}} $(just cln5-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("lnd6")]
@@ -305,7 +275,7 @@ cln0-getinfo:
 
 [group("cln0")]
 cln0-invoice amount_msat='1000' label=uuid():
-  @just cln-create-invoice {{cln0_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
+  @just cln::cln-create-invoice {{cln0_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
 
 [group("cln0")]
 cln0-listinvoices:
@@ -335,7 +305,7 @@ cln0-listpeers:
 # Generate a new on-chain address of the internal wallet
 [group("cln0")]
 cln0-newaddr:
-  @just cln-newaddr {{cln0_container_name}}
+  @just cln::cln-newaddr {{cln0_container_name}}
 
 # Send funds on-chain from the internal wallet
 [group("cln0")]
@@ -352,12 +322,12 @@ cln0-listfunds spent='false':
 setup-fund-wallets:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just bitcoin::mine 2 $(just cln-newaddr {{cln0_container_name}})
-  just bitcoin::mine 1 $(just cln-newaddr {{cln1_container_name}})
-  just bitcoin::mine 1 $(just cln-newaddr {{cln2_container_name}})
-  just bitcoin::mine 1 $(just cln-newaddr {{cln3_container_name}})
-  just bitcoin::mine 1 $(just cln-newaddr {{cln4_container_name}})
-  just bitcoin::mine 1 $(just cln-newaddr {{cln5_container_name}})
+  just bitcoin::mine 2 $(just cln::cln-newaddr {{cln0_container_name}})
+  just bitcoin::mine 1 $(just cln::cln-newaddr {{cln1_container_name}})
+  just bitcoin::mine 1 $(just cln::cln-newaddr {{cln2_container_name}})
+  just bitcoin::mine 1 $(just cln::cln-newaddr {{cln3_container_name}})
+  just bitcoin::mine 1 $(just cln::cln-newaddr {{cln4_container_name}})
+  just bitcoin::mine 1 $(just cln::cln-newaddr {{cln5_container_name}})
   just bitcoin::mine 1 $(just lnd-newaddr {{lnd6_container_name}})
 
 [private]
@@ -388,14 +358,14 @@ probe-payment-cln0-cln5:
   # cln0<->cln5
   ## cln0->cln5
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln5_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
-  just cln-exec {{cln0_container_name}} pay "${INVOICE0_BOLT11}"
-  just cln-exec {{cln5_container_name}} waitinvoice "${INVOICE0_LABEL}"
+  INVOICE0_BOLT11=$(just cln::cln-create-invoice {{cln5_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  just cln::cln-exec {{cln0_container_name}} pay "${INVOICE0_BOLT11}"
+  just cln::cln-exec {{cln5_container_name}} waitinvoice "${INVOICE0_LABEL}"
   ## cln5->cln0
   INVOICE1_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE1_BOLT11=$(just cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
-  just cln-exec {{cln5_container_name}} pay "${INVOICE1_BOLT11}"
-  just cln-exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
+  INVOICE1_BOLT11=$(just cln::cln-create-invoice {{cln0_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
+  just cln::cln-exec {{cln5_container_name}} pay "${INVOICE1_BOLT11}"
+  just cln::cln-exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
   echo "HEALTHCHECK SUCCESS (cln0<->cln5)."
 
 # Send payments back and forth between cln1<->lnd6
@@ -407,12 +377,12 @@ probe-payment-cln1-lnd6:
   # cln1<->lnd6
   ## lnd6->cln1
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
-  INVOICE0_BOLT11=$(just cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
+  INVOICE0_BOLT11=$(just cln::cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
   just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
-  just cln-exec {{cln1_container_name}} waitinvoice "${INVOICE0_LABEL}"
+  just cln::cln-exec {{cln1_container_name}} waitinvoice "${INVOICE0_LABEL}"
   ## cln1->lnd6
   INVOICE1_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
-  just cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
+  just cln::cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
 
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
@@ -446,7 +416,7 @@ init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 132
   @just cln0-listchannels
-  @just cln-exec {{cln0_container_name}} createrune
+  @just cln::cln-exec {{cln0_container_name}} createrune
 
 # Initialize setup; setup lightning infra and ebill data
 [group("setup")]
@@ -464,9 +434,9 @@ info:
   @echo "cln0 rest endpoint: https://localhost:13010"
   @echo "cln0 swagger ui: https://localhost:13010/swagger-ui"
   @echo "cln0 getinfo:"
-  @just cln-exec {{cln0_container_name}} getinfo | jq
+  @just cln::cln-exec {{cln0_container_name}} getinfo | jq
   @echo "cln0 showrunes:"
-  @just cln-exec {{cln0_container_name}} showrunes | jq
+  @just cln::cln-exec {{cln0_container_name}} showrunes | jq
   @echo "## lnd6"
   @echo "lnd6 container name: {{lnd6_container_name}}"
   @echo "lnd6 rest endpoint: https://localhost:19841"
