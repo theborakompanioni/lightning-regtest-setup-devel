@@ -428,6 +428,8 @@ services:
       - '--db.postgres.dsn=postgresql://regtest_lnd6_farid:regtest_lnd6_farid@regtest_db:5432/regtest_lnd6_farid'
       - '--db.postgres.timeout=0'
       - '--noseedbackup'
+      - '--listen=0.0.0.0:9735'
+      - '--externalip=regtest_lnd6_farid:9735'
       - '--restlisten=regtest_lnd6_farid:8080'
       - '--rpclisten=regtest_lnd6_farid:10009'
       - '--rpclisten=localhost:10009' # needed for healthcheck
@@ -444,6 +446,7 @@ services:
       - ./data/lnd_common/tls.cert:/home/lnd/.lnd/tls.cert
       - ./data/lnd_common/tls.key:/home/lnd/.lnd/tls.key
     ports:
+      - "19741:9735"
       - "19841:8080"
       - "19941:10009"
     healthcheck:
