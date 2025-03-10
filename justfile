@@ -2,6 +2,7 @@
 
 mod bitcoin
 mod cln
+mod lnd
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -116,32 +117,6 @@ logs *args='':
 ps *args='':
   @just docker-exec ps {{args}}
 
-# Execute a lncli-cli command (LND)
-[private]
-[group("lnd")]
-lnd-exec container_name +command:
-  @docker exec -t {{container_name}} lncli --lnddir=/home/lnd/.lnd --network=regtest --no-macaroons {{command}}
-
-[private]
-[group("lnd")]
-lnd-newaddr container_name address_type='p2wkh':
-  @just lnd-exec {{container_name}} newaddress {{address_type}} | jq --raw-output .address
-
-[private]
-[group("lnd")]
-lnd-id container_name:
-  @just lnd-exec {{container_name}} getinfo | jq --raw-output .identity_pubkey
-
-[private]
-[group("lnd")]
-lnd-openchannel container_name id amount_sat='1000000' push_sat='500000':
-  @just lnd-exec {{container_name}} openchannel --node_key {{id}} --local_amt {{amount_sat}} --push_amt {{push_sat}}
-
-[private]
-[group("lnd")]
-lnd-create-invoice container_name amount_msat='1000':
-  @just lnd-exec {{container_name}} addinvoice --amt_msat {{amount_msat}}
-
 # Execute a command on instance "cln0"
 [group("cln0")]
 cln0-exec +command:
@@ -155,15 +130,15 @@ cln3-exec +command:
 # Execute a command on instance "lnd6"
 [group("lnd6")]
 lnd6-exec +command:
-  @just lnd-exec {{lnd6_container_name}} {{command}}
+  @just lnd::lnd-exec {{lnd6_container_name}} {{command}}
 
 [private]
 [group("lnd6")]
 lnd6-connect-cln3:
   #!/usr/bin/env bash
   set -euxo pipefail
-  just lnd-exec {{lnd6_container_name}} disconnect $(just cln3-id) || :
-  just lnd-exec {{lnd6_container_name}} connect $(just cln3-id)@{{cln3_container_name}}:{{cln3_lightning_port}} --timeout 30s --perm
+  just lnd::lnd-exec {{lnd6_container_name}} disconnect $(just cln3-id) || :
+  just lnd::lnd-exec {{lnd6_container_name}} connect $(just cln3-id)@{{cln3_container_name}}:{{cln3_lightning_port}} --timeout 30s --perm
 
 [private]
 [group("cln1")]
@@ -188,7 +163,7 @@ cln5-id:
 [private]
 [group("lnd6")]
 lnd6-id:
-  @just lnd-id {{lnd6_container_name}}
+  @just lnd::lnd-id {{lnd6_container_name}}
 
 [private]
 [group("cln0")]
@@ -263,7 +238,7 @@ cln3-fundchannel-cln5 amount_sat='2097151' feerate='1' announce='false' minconf=
 lnd6-fundchannel-cln3 amount_sat='4194303' push_sat='2097151':
   #!/usr/bin/env bash
   set -euxo pipefail
-  just lnd-openchannel {{lnd6_container_name}} $(just cln3-id) {{amount_sat}} {{push_sat}}
+  just lnd::lnd-openchannel {{lnd6_container_name}} $(just cln3-id) {{amount_sat}} {{push_sat}}
 
 [group("cln0")]
 cln0-help:
@@ -328,7 +303,7 @@ setup-fund-wallets:
   just bitcoin::mine 1 $(just cln::cln-newaddr {{cln3_container_name}})
   just bitcoin::mine 1 $(just cln::cln-newaddr {{cln4_container_name}})
   just bitcoin::mine 1 $(just cln::cln-newaddr {{cln5_container_name}})
-  just bitcoin::mine 1 $(just lnd-newaddr {{lnd6_container_name}})
+  just bitcoin::mine 1 $(just lnd::lnd-newaddr {{lnd6_container_name}})
 
 [private]
 [group("setup")]
@@ -378,10 +353,10 @@ probe-payment-cln1-lnd6:
   ## lnd6->cln1
   INVOICE0_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
   INVOICE0_BOLT11=$(just cln::cln-create-invoice {{cln1_container_name}} 1000 "${INVOICE0_LABEL}" | jq --raw-output .bolt11)
-  just lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
+  just lnd::lnd-exec {{lnd6_container_name}} sendpayment --force --pay_req="${INVOICE0_BOLT11}"
   just cln::cln-exec {{cln1_container_name}} waitinvoice "${INVOICE0_LABEL}"
   ## cln1->lnd6
-  INVOICE1_BOLT11=$(just lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
+  INVOICE1_BOLT11=$(just lnd::lnd-create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
   just cln::cln-exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
 
@@ -390,7 +365,7 @@ probe-payment-cln1-lnd6:
 probe-payment:
   #!/usr/bin/env bash
   set -euxo pipefail
-  while true; do 
+  while true; do
     just probe-payment-cln0-cln5
     just probe-payment-cln1-lnd6
     sleep 3
