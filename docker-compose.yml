@@ -22,7 +22,7 @@ services:
 
   bitcoind:
     container_name: regtest_bitcoind
-    image: polarlightning/bitcoind:27.0
+    image: polarlightning/bitcoind:28.0@sha256:ff435d758c89f01823924e057d5d5e4206d350ae69dff5e0dc1bbc9c6a36d010
     restart: unless-stopped
     volumes:
       - bitcoind-data:/home/bitcoin/.bitcoin/regtest
