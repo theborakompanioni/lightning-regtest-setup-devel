@@ -310,7 +310,6 @@ setup-fund-wallets:
   just bitcoin::mine 1 $(just cln::newaddr {{cln5_container_name}})
   just bitcoin::mine 1 $(just lnd::newaddr {{lnd6_container_name}})
 
-[private]
 [group("setup")]
 setup-connect-peers:
   @just cln0-connect-cln1
@@ -346,7 +345,7 @@ probe-payment-cln0-cln5:
   INVOICE1_BOLT11=$(just cln::create-invoice {{cln0_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
   just cln::exec {{cln5_container_name}} pay "${INVOICE1_BOLT11}"
   just cln::exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
-  echo "HEALTHCHECK SUCCESS (cln0<->cln5)."
+  echo "HEALTHCHECK PAYMENT SUCCESS (cln0<->cln5)."
 
 # Send payments back and forth between cln1<->lnd6
 [private]
@@ -363,7 +362,7 @@ probe-payment-cln1-lnd6:
   ## cln1->lnd6
   INVOICE1_BOLT11=$(just lnd::create-invoice {{lnd6_container_name}} 1000 | jq --raw-output .payment_request)
   just cln::exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
-  echo "HEALTHCHECK SUCCESS (cln1<->lnd6)."
+  echo "HEALTHCHECK PAYMENT SUCCESS (cln1<->lnd6)."
 
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
@@ -373,6 +372,26 @@ probe-payment:
   while true; do
     just probe-payment-cln0-cln5
     just probe-payment-cln1-lnd6
+    sleep 3
+  done
+
+# Send payments back and forth between cln1<->lnd6
+[private]
+[group("health")]
+probe-keysend-cln1-lnd6:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just cln::exec {{cln1_container_name}} keysend $(just lnd6-id) 1000
+  just lnd::exec {{lnd6_container_name}} sendpayment --dest $(just cln1-id) --amt 1000 --keysend
+  echo "HEALTHCHECK KEYSEND SUCCESS (cln1<->lnd6)."
+
+# Send keysend back and forth between cln1<->cln6
+[group("health")]
+probe-keysend:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  while true; do
+    just probe-keysend-cln1-lnd6
     sleep 3
   done
 

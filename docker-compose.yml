@@ -414,6 +414,7 @@ services:
       cln3_charlie:
         condition: service_healthy
     command:
+      # see all options: https://docs.lightning.engineering/lightning-network-tools/lnd/lnd.conf
       - '--alias=lnd6_farid'
       - '--bitcoin.regtest'
       - '--bitcoin.node=bitcoind'
@@ -437,6 +438,8 @@ services:
       - '--debuglevel=debug'
       - '--maxpendingchannels=21'
       - '--trickledelay=1000'
+      - '--accept-keysend'
+      - '--accept-amp'
       # Skip setting up macaroons for now, as it does not work properly and ends up with exception
       # `io.grpc.StatusRuntimeException: UNKNOWN: verification failed: signature mismatch after caveat verification`
       - '--no-macaroons'
