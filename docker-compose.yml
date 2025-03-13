@@ -251,7 +251,7 @@ services:
 
   cln3_charlie:
     container_name: regtest_cln3_charlie
-    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
+    image: polarlightning/clightning:25.02@sha256:dd0eeb748bce27eb10e25369239abdc00f087975b3c5cb938a024450cab5f948
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -270,7 +270,7 @@ services:
       - '--bitcoin-rpcport=18443'
       - '--bitcoin-rpcuser=charlie'
       - '--bitcoin-rpcpassword=charlie'
-      #- '--grpc-host=0.0.0.0' # only supported in >=v24.11.1
+      - '--grpc-host=0.0.0.0'
       - '--grpc-port=19935'
       - '--network=regtest'
       - '--log-level=info'
