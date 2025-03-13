@@ -415,7 +415,6 @@ services:
         condition: service_healthy
     command:
       - '--alias=lnd6_farid'
-      - '--bitcoin.active'
       - '--bitcoin.regtest'
       - '--bitcoin.node=bitcoind'
       - '--bitcoin.defaultchanconfs=1'
