@@ -427,7 +427,6 @@ services:
       - '--db.backend=postgres'
       - '--db.postgres.dsn=postgresql://regtest_lnd6_farid:regtest_lnd6_farid@regtest_db:5432/regtest_lnd6_farid'
       - '--db.postgres.timeout=0'
-      - '--noseedbackup'
       - '--listen=0.0.0.0:9735'
       - '--externalip=regtest_lnd6_farid:9735'
       - '--restlisten=regtest_lnd6_farid:8080'
@@ -437,9 +436,10 @@ services:
       #- '--debuglevel=info'
       - '--debuglevel=debug'
       - '--maxpendingchannels=21'
-      - '--trickledelay=1000'
+      - '--trickledelay=50'
       - '--accept-keysend'
       - '--accept-amp'
+      - '--noseedbackup'
       # Skip setting up macaroons for now, as it does not work properly and ends up with exception
       # `io.grpc.StatusRuntimeException: UNKNOWN: verification failed: signature mismatch after caveat verification`
       - '--no-macaroons'

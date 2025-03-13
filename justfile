@@ -178,71 +178,51 @@ cln0-connect id host port:
 [private]
 [group("cln0")]
 cln0-connect-cln1:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::connect {{cln0_container_name}} $(just cln1-id) {{cln1_container_name}} {{cln1_lightning_port}}
 
 [private]
 [group("cln0")]
 cln0-connect-cln2:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::connect {{cln0_container_name}} $(just cln2-id) {{cln2_container_name}} {{cln2_lightning_port}}
 
 [private]
 [group("cln2")]
 cln2-connect-cln3:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::connect {{cln2_container_name}} $(just cln3-id) {{cln3_container_name}} {{cln3_lightning_port}}
 
 [private]
 [group("cln3")]
 cln3-connect-cln5:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::connect {{cln3_container_name}} $(just cln5-id) {{cln5_container_name}} {{cln5_lightning_port}}
 
 [private]
 [group("cln3")]
 cln3-connect-lnd6:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::connect {{cln3_container_name}} $(just lnd6-id) {{lnd6_container_name}} {{lnd6_lightning_port}}
 
 [private]
 [group("cln0")]
 cln0-fundchannel-cln1 amount_sat='16777215' feerate='1' announce='true' minconf='6' push_msat='8388607500':
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::fundchannel {{cln0_container_name}} $(just cln1-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln0")]
 cln0-fundchannel-cln2 amount_sat='8388607' feerate='1' announce='true' minconf='6' push_msat='4194303500':
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::fundchannel {{cln0_container_name}} $(just cln2-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln2")]
 cln2-fundchannel-cln3 amount_sat='4194303' feerate='1' announce='true' minconf='6' push_msat='2097151500':
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::fundchannel {{cln2_container_name}} $(just cln3-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("cln3")]
 cln3-fundchannel-cln5 amount_sat='2097151' feerate='1' announce='false' minconf='6' push_msat='1048575500':
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just cln::fundchannel {{cln3_container_name}} $(just cln5-id) {{amount_sat}} {{feerate}} {{announce}} {{minconf}} {{push_msat}}
 
 [private]
 [group("lnd6")]
 lnd6-fundchannel-cln3 amount_sat='4194303' push_sat='2097151':
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just lnd::openchannel {{lnd6_container_name}} $(just cln3-id) {{amount_sat}} {{push_sat}}
 
 [group("cln0")]
@@ -300,8 +280,6 @@ cln0-listfunds spent='false':
 [private]
 [group("setup")]
 setup-fund-wallets:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just bitcoin::mine 2 $(just cln::newaddr {{cln0_container_name}})
   just bitcoin::mine 1 $(just cln::newaddr {{cln1_container_name}})
   just bitcoin::mine 1 $(just cln::newaddr {{cln2_container_name}})
