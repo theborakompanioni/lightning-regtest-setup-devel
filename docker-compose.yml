@@ -459,6 +459,39 @@ services:
       start_period: 60s
       start_interval: 3s
 
+  eclair7_grace:
+    container_name: regtest_eclair7_grace
+    image: polarlightning/eclair:0.11.0@sha256:20e30612035d3d72be7da86e4e8b895dc04ab455a8359c209f73a639c17e27ff
+    restart: unless-stopped
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      cln3_charlie:
+        condition: service_healthy
+    command:
+      - '--node-alias=eclair7_grace'
+      - '--server.public-ips.0=regtest_eclair7_grace'
+      - '--server.port=9735'
+      - '--api.enabled=true'
+      - '--api.binding-ip=0.0.0.0'
+      - '--api.port=8080'
+      - '--api.password=eclair'
+      - '--chain=regtest'
+      - '--bitcoind.host=regtest_bitcoind'
+      - '--bitcoind.rpcport=18443'
+      - '--bitcoind.rpcuser=regtest'
+      - '--bitcoind.rpcpassword=regtest'
+      - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28336'
+      - '--bitcoind.zmqtx=tcp://regtest_bitcoind:28335'
+      - '--datadir=/home/eclair/.eclair'
+      - '--printToConsole=true'
+      - '--on-chain-fees.feerate-tolerance.ratio-low=0.00001'
+      - '--on-chain-fees.feerate-tolerance.ratio-high=10000.0'
+      - '--channel.max-htlc-value-in-flight-percent=100'
+      - '--channel.max-htlc-value-in-flight-msat=5000000000000' # 50 BTC in msats
+
 volumes:
   bitcoind-data:
   postgres-data:
