@@ -459,6 +459,21 @@ services:
       start_period: 60s
       start_interval: 3s
 
+  eclair_wallet_init:
+      container_name: regtest_eclair_wallet_init
+      build:
+        context: ./data/eclair_wallet_init
+        dockerfile: Dockerfile
+      restart: on-failure
+      environment:
+        RPC_HOST: regtest_bitcoind
+        RPC_PORT: 18443
+        RPC_USER: regtest
+        RPC_PASSWORD: regtest
+      depends_on:
+        bitcoind:
+          condition: service_healthy
+
   eclair7_grace:
     container_name: regtest_eclair7_grace
     image: polarlightning/eclair:0.11.0@sha256:20e30612035d3d72be7da86e4e8b895dc04ab455a8359c209f73a639c17e27ff
@@ -468,9 +483,13 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      eclair_wallet_init:
+        condition: service_started
       cln3_charlie:
-        condition: service_healthy
+        condition: service_healthy 
     command:
+      - 'polar-eclair'
+      # see https://github.com/ACINQ/eclair/blob/master/eclair-core/src/main/resources/reference.conf
       - '--node-alias=eclair7_grace'
       - '--server.public-ips.0=regtest_eclair7_grace'
       - '--server.port=9735'
@@ -483,14 +502,17 @@ services:
       - '--bitcoind.rpcport=18443'
       - '--bitcoind.rpcuser=regtest'
       - '--bitcoind.rpcpassword=regtest'
-      - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28336'
-      - '--bitcoind.zmqtx=tcp://regtest_bitcoind:28335'
+      - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28332'
+      - '--bitcoind.zmqtx=tcp://regtest_bitcoind:28333'
+      - '--bitcoind.wallet=wallet_eclair_grace7'
       - '--datadir=/home/eclair/.eclair'
       - '--printToConsole=true'
       - '--on-chain-fees.feerate-tolerance.ratio-low=0.00001'
       - '--on-chain-fees.feerate-tolerance.ratio-high=10000.0'
       - '--channel.max-htlc-value-in-flight-percent=100'
       - '--channel.max-htlc-value-in-flight-msat=5000000000000' # 50 BTC in msats
+    ports:
+      - "20080:8080"
 
 volumes:
   bitcoind-data:
