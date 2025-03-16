@@ -7,7 +7,7 @@ services:
       - postgres-data:/postgresql_data
       - ./data/pg/init:/docker-entrypoint-initdb.d/
     environment:
-      POSTGRES_ADDITIONAL_DATABASES: regtest_cln1_alice,regtest_cln2_bob,regtest_cln3_charlie,regtest_cln4_dave,regtest_cln5_erin,regtest_lnd6_farid,regtest_cln0_app
+      POSTGRES_ADDITIONAL_DATABASES: regtest_cln1_alice,regtest_cln2_bob,regtest_cln3_charlie,regtest_cln4_dave,regtest_cln5_erin,regtest_lnd6_farid,regtest_eclair7_grace,regtest_cln0_app
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
@@ -464,7 +464,7 @@ services:
       build:
         context: ./data/eclair_wallet_init
         dockerfile: Dockerfile
-      restart: on-failure
+      restart: no
       environment:
         RPC_HOST: regtest_bitcoind
         RPC_PORT: 18443
@@ -491,13 +491,14 @@ services:
       - 'polar-eclair'
       # see https://github.com/ACINQ/eclair/blob/master/eclair-core/src/main/resources/reference.conf
       - '--node-alias=eclair7_grace'
+      - '--datadir=/home/eclair/.eclair'
+      - '--chain=regtest'
       - '--server.public-ips.0=regtest_eclair7_grace'
       - '--server.port=9735'
       - '--api.enabled=true'
       - '--api.binding-ip=0.0.0.0'
       - '--api.port=8080'
       - '--api.password=eclair'
-      - '--chain=regtest'
       - '--bitcoind.host=regtest_bitcoind'
       - '--bitcoind.rpcport=18443'
       - '--bitcoind.rpcuser=regtest'
@@ -505,12 +506,17 @@ services:
       - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28332'
       - '--bitcoind.zmqtx=tcp://regtest_bitcoind:28333'
       - '--bitcoind.wallet=wallet_eclair_grace7'
-      - '--datadir=/home/eclair/.eclair'
-      - '--printToConsole=true'
+      - '--db.driver=postgres'
+      - '--db.postgres.database=regtest_eclair7_grace'
+      - '--db.postgres.host=regtest_db'
+      - '--db.postgres.port=5432'
+      - '--db.postgres.username=regtest_eclair7_grace'
+      - '--db.postgres.password=regtest_eclair7_grace'
       - '--on-chain-fees.feerate-tolerance.ratio-low=0.00001'
       - '--on-chain-fees.feerate-tolerance.ratio-high=10000.0'
       - '--channel.max-htlc-value-in-flight-percent=100'
       - '--channel.max-htlc-value-in-flight-msat=5000000000000' # 50 BTC in msats
+      - '--printToConsole=true'
     ports:
       - "20080:8080"
 
