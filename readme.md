@@ -76,10 +76,12 @@ flowchart TB
    dave["dave (cln4)"]
    erin["erin (cln5)"]
    farid["farid (lnd6)"]
+   grace["grace (eclair7)"]
    app -->|16_777_215 sat| alice
    app -->|8_388_607 sat| bob
    bob -->|4_194_303 sat| charlie
    farid -->|4_194_303 sat| charlie
+   farid -->|2_097_151 sat| grace
    charlie -. private 2_097_151 sat .-> erin
    app ~~~ dave
    alice ~~~ dave
@@ -87,6 +89,7 @@ flowchart TB
    charlie ~~~ dave
    erin ~~~ dave
    farid ~~~ dave
+   grace ~~~ dave
 ```
 
 

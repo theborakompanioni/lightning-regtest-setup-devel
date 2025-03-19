@@ -138,10 +138,14 @@ lnd6-exec +command:
 [private]
 [group("lnd6")]
 lnd6-connect-cln3:
-  #!/usr/bin/env bash
-  set -euxo pipefail
   just lnd::exec {{lnd6_container_name}} disconnect $(just cln3-id) || :
   just lnd::exec {{lnd6_container_name}} connect $(just cln3-id)@{{cln3_container_name}}:{{cln3_lightning_port}} --timeout 30s --perm
+
+[private]
+[group("lnd6")]
+lnd6-connect-eclair7:
+  just lnd::exec {{lnd6_container_name}} disconnect $(just eclair7-id) || :
+  just lnd::exec {{lnd6_container_name}} connect $(just eclair7-id)@{{eclair7_container_name}}:{{eclair7_lightning_port}} --timeout 30s --perm
 
 [private]
 [group("cln0")]
@@ -172,6 +176,11 @@ cln5-id:
 [group("lnd6")]
 lnd6-id:
   @just lnd::id {{lnd6_container_name}}
+
+[private]
+[group("eclair7")]
+eclair7-id:
+  @just eclair::id {{eclair7_container_name}}
 
 [private]
 [group("cln0")]
@@ -227,6 +236,11 @@ cln3-fundchannel-cln5 amount_sat='2097151' feerate='1' announce='false' minconf=
 [group("lnd6")]
 lnd6-fundchannel-cln3 amount_sat='4194303' push_sat='2097151':
   just lnd::openchannel {{lnd6_container_name}} $(just cln3-id) {{amount_sat}} {{push_sat}}
+
+[private]
+[group("lnd6")]
+lnd6-fundchannel-eclair7 amount_sat='2097151' push_sat='1048575':
+  just lnd::openchannel {{lnd6_container_name}} $(just eclair7-id) {{amount_sat}} {{push_sat}}
 
 [group("cln0")]
 cln0-help:
@@ -300,6 +314,7 @@ setup-connect-peers:
   @just cln3-connect-cln5
   #@just lnd6-connect-cln3
   @just cln3-connect-lnd6
+  @just lnd6-connect-eclair7
 
 [private]
 [group("setup")]
@@ -309,6 +324,7 @@ setup-create-channels:
   @just cln2-fundchannel-cln3
   @just cln3-fundchannel-cln5
   @just lnd6-fundchannel-cln3
+  @just lnd6-fundchannel-eclair7
 
 # Send payments back and forth cln0<->cln5
 [private]

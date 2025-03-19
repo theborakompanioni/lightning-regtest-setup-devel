@@ -413,6 +413,8 @@ services:
         condition: service_healthy
       cln3_charlie:
         condition: service_healthy
+      eclair7_grace:
+        condition: service_started
     command:
       # see all options: https://docs.lightning.engineering/lightning-network-tools/lnd/lnd.conf
       - '--alias=lnd6_farid'
