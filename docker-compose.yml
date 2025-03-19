@@ -503,7 +503,7 @@ services:
       - '--bitcoind.rpcport=18443'
       - '--bitcoind.rpcuser=regtest'
       - '--bitcoind.rpcpassword=regtest'
-      - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28332'
+      - '--bitcoind.zmqblock=tcp://regtest_bitcoind:28334' # block hash, not raw block!
       - '--bitcoind.zmqtx=tcp://regtest_bitcoind:28333'
       - '--bitcoind.wallet=wallet_eclair_grace7'
       - '--db.driver=postgres'
