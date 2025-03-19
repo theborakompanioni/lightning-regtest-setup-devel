@@ -1,3 +1,5 @@
+# https://docs.corelightning.org/reference/lightningd-config
+
 
 # Execute a lightning-cli command (CLN)
 [private]

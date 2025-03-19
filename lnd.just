@@ -1,3 +1,5 @@
+# https://lightning.engineering/api-docs/api/lnd/index.html
+
 # Execute a lncli-cli command (LND)
 [private]
 [group("lnd")]

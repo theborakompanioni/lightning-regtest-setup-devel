@@ -1,6 +1,4 @@
-
-# Execute a lightning-cli command (CLN)
-
+# https://acinq.github.io/eclair/
 
 # Remove color codes from text with this sed expression
 # e.g. this is needed for parsing "getinfo" response with `jq`
@@ -16,6 +14,7 @@ s/[^[:print:]\t]//g
 
 eclair_default_password := 'eclair'
 
+# Execute a eclair-cli command (eclair)
 [private]
 [group("eclair")]
 exec container_name +command:
