@@ -23,7 +23,7 @@ cln5_container_name := 'regtest_cln5_erin'
 cln5_lightning_port := '19846'
 lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
-eclair7_container_name := 'regtest_eclar7_grace'
+eclair7_container_name := 'regtest_eclair7_grace'
 eclair7_lightning_port := '9735'
 
 # print available targets
@@ -290,6 +290,7 @@ setup-fund-wallets:
   just bitcoin::mine 1 $(just cln::newaddr {{cln4_container_name}})
   just bitcoin::mine 1 $(just cln::newaddr {{cln5_container_name}})
   just bitcoin::mine 1 $(just lnd::newaddr {{lnd6_container_name}})
+  just bitcoin::mine 1 $(just eclair::newaddr {{eclair7_container_name}})
 
 [group("setup")]
 setup-connect-peers:
@@ -382,19 +383,19 @@ probe-keysend:
 init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 1
-  @just setup-fund-wallets # mines 8 blocks; afterwards blockheight := 5
+  @just setup-fund-wallets # mines 9 blocks; afterwards blockheight := 10
   @just bitcoin::mine 100
-  @just cln0-waitblockheight 109
+  @just cln0-waitblockheight 110
   @just setup-connect-peers
   @just setup-create-channels
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 115
+  @just cln0-waitblockheight 116
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 121
+  @just cln0-waitblockheight 122
   @just bitcoin::mine 10
-  @just cln0-waitblockheight 131
-  @just bitcoin::mine 1
   @just cln0-waitblockheight 132
+  @just bitcoin::mine 1
+  @just cln0-waitblockheight 133
   @just cln0-listchannels
   @just cln::exec {{cln0_container_name}} createrune
 

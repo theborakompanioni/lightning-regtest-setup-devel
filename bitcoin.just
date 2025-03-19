@@ -19,7 +19,7 @@ getblockchaininfo:
 # Mine to a specified address and return the block hashes.
 [group("bitcoin")]
 mine blocks='1' address='bcrt1qrnz0thqslhxu86th069r9j6y7ldkgs2tzgf5wx':
-  @echo {{address}}
+  @echo "{{address}}"
   @just bitcoin::exec generatetoaddress "{{blocks}}" "{{address}}"
 
 # Print info of bitcoin service
