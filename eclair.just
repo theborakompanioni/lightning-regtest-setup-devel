@@ -19,14 +19,19 @@ eclair_default_password := 'eclair'
 [private]
 [group("eclair")]
 exec container_name +command:
-  @docker exec -t {{container_name}} eclair-cli -p {{eclair_default_password}} {{command}}
+  @docker exec -t {{container_name}} eclair-cli -p {{eclair_default_password}} {{command}} | sed --expression='{{decolorize_expr}}'
 
 [private]
 [group("eclair")]
 id container_name:
-  @just eclair::exec {{container_name}} getinfo | sed --expression='{{decolorize_expr}}' | jq --raw-output .nodeId
+  @just eclair::exec {{container_name}} getinfo | jq --raw-output .nodeId
 
 [private]
 [group("eclair")]
 newaddr container_name:
   @just eclair::exec {{container_name}} getnewaddress | sed --expression='{{remove_nonprintchars_expr}}'
+
+[private]
+[group("eclair")]
+create-invoice container_name amount_msat='1000' description=uuid() *args='':
+  @just eclair::exec {{container_name}} createinvoice --description={{description}} --amountMsat={{amount_msat}} {{args}}

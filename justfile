@@ -303,7 +303,7 @@ setup-fund-wallets:
   just bitcoin::mine 1 $(just cln::newaddr {{cln3_container_name}})
   just bitcoin::mine 1 $(just cln::newaddr {{cln4_container_name}})
   just bitcoin::mine 1 $(just cln::newaddr {{cln5_container_name}})
-  just bitcoin::mine 1 $(just lnd::newaddr {{lnd6_container_name}})
+  just bitcoin::mine 2 $(just lnd::newaddr {{lnd6_container_name}})
   just bitcoin::mine 1 $(just eclair::newaddr {{eclair7_container_name}})
 
 [group("setup")]
@@ -362,6 +362,25 @@ probe-payment-cln1-lnd6:
   just cln::exec {{cln1_container_name}} pay "${INVOICE1_BOLT11}"
   echo "HEALTHCHECK PAYMENT SUCCESS (cln1<->lnd6)."
 
+  # Send payments back and forth cln0<->eclair7
+[private]
+[group("health")]
+probe-payment-cln0-eclair7:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  # cln0<->eclair7
+  ## cln0->eclair7
+  INVOICE0_DESC=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE0_BOLT11=$(just eclair::create-invoice {{eclair7_container_name}} 1000 "${INVOICE0_DESC}" | jq --raw-output .serialized)
+  just cln::exec {{cln0_container_name}} pay "${INVOICE0_BOLT11}"
+  ## eclair7->cln0
+  INVOICE1_LABEL=$(printf "healthcheck_%s" "$(uuidgen -t)")
+  INVOICE1_BOLT11=$(just cln::create-invoice {{cln0_container_name}} 1000 "${INVOICE1_LABEL}" | jq --raw-output .bolt11)
+  just eclair::exec {{eclair7_container_name}} payinvoice --invoice="${INVOICE1_BOLT11}"
+  just cln::exec {{cln0_container_name}} waitinvoice "${INVOICE1_LABEL}"
+  echo "HEALTHCHECK PAYMENT SUCCESS (cln0<->eclair7)."
+
+
 # Send payments back and forth between cln0<->cln5 and cln1<->lnd6
 [group("health")]
 probe-payment:
@@ -370,6 +389,7 @@ probe-payment:
   while true; do
     just probe-payment-cln0-cln5
     just probe-payment-cln1-lnd6
+    just probe-payment-cln0-eclair7
     sleep 3
   done
 
@@ -399,19 +419,19 @@ probe-keysend:
 init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 1
-  @just setup-fund-wallets # mines 9 blocks; afterwards blockheight := 10
+  @just setup-fund-wallets # mines 10 blocks; afterwards blockheight := 11
   @just bitcoin::mine 100
-  @just cln0-waitblockheight 110
+  @just cln0-waitblockheight 111
   @just setup-connect-peers
   @just setup-create-channels
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 116
+  @just cln0-waitblockheight 117
   @just bitcoin::mine 6
-  @just cln0-waitblockheight 122
+  @just cln0-waitblockheight 123
   @just bitcoin::mine 10
-  @just cln0-waitblockheight 132
-  @just bitcoin::mine 1
   @just cln0-waitblockheight 133
+  @just bitcoin::mine 1
+  @just cln0-waitblockheight 134
   @just cln0-listchannels
   @just cln::exec {{cln0_container_name}} createrune
 
