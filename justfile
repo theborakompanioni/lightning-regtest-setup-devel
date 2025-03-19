@@ -3,6 +3,7 @@
 mod bitcoin
 mod cln
 mod lnd
+mod eclair
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -22,6 +23,8 @@ cln5_container_name := 'regtest_cln5_erin'
 cln5_lightning_port := '19846'
 lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
+eclair7_container_name := 'regtest_eclar7_grace'
+eclair7_lightning_port := '9735'
 
 # print available targets
 [group("project-agnostic")]
