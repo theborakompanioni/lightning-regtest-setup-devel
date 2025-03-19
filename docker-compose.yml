@@ -519,6 +519,13 @@ services:
       - '--printToConsole=true'
     ports:
       - "20080:8080"
+    healthcheck:
+      test: [ "CMD", "/entrypoint.sh", "eclair-cli", "-p eclair", "getinfo" ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
 
 volumes:
   bitcoind-data:
