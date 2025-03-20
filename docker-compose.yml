@@ -193,6 +193,42 @@ services:
       interval: 5s
       retries: 10
 
+  lnd6_farid_mint:
+    container_name: regtest_lnd6_farid_mint
+    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    restart: unless-stopped
+    depends_on:
+      lnd6_farid:
+        condition: service_healthy
+    environment:
+      # https://github.com/cashubtc/nutshell/blob/main/.env.example
+      - MINT_LISTEN_HOST=0.0.0.0
+      - MINT_LISTEN_PORT=3338
+      - MINT_PRIVATE_KEY=TEST_PRIVATE_KEY
+      - API_PORT=4448
+      - TOR=FALSE
+      - DEBUG=TRUE
+      #- MINT_INFO_NAME="Farid Cashu mint"
+      #- MINT_DATABASE=postgres://cashu:cashu@localhost:5432/cashu
+      - MINT_BACKEND_BOLT11_SAT=LndRestWallet
+      - MINT_LND_REST_ENDPOINT=https://regtest_lnd6_farid:8080
+      - MINT_LND_REST_CERT=/tls.cert
+      - MINT_LND_REST_MACAROON=/tls.cert
+      - MINT_LND_REST_CERT_VERIFY=False # otherwise fails with: `certificate verify failed: Hostname mismatch, certificate is not valid for 'regtest_lnd6_farid'.`
+    command: ["poetry", "run", "mint"]
+    volumes:
+      - ./data/lnd_common/tls.cert:/tls.cert
+    ports:
+      - "14338:3338"
+      - "14448:4448"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://127.0.0.1:3338/v1/info || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
+
   cln2_bob:
     container_name: regtest_cln2_bob
     #image: polarlightning/clightning:24.08.1
