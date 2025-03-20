@@ -1,0 +1,40 @@
+{
+    "multiPass": "password",
+    "port": "3000",
+    "defaultNodeIndex": 1,
+    "dbDirectoryPath": "<Complete path of the folder where rtl's database file should be saved>",
+    "SSO": {
+      "rtlSSO": 0,
+      "rtlCookiePath": "",
+      "logoutRedirectLink": ""
+    },
+    "nodes": [
+      {
+        "index": 1,
+        "lnNode": "LND Testnet",
+        "lnImplementation": "LND",
+        "authentication": {
+          "macaroonPath": "<Complete path of the folder containing LND admin.macaroon for the node>",
+          "runePath": "<Complete path including filename for CLN rune for the node, rune format 'LIGHTNING_RUNE="your-rune"'>",
+          "lnApiPassword": "<Can be used to provide password in ECL implementation>",
+          "swapMacaroonPath": "<Complete path of the folder containing Loop's loop.macaroon for the node>",
+          "boltzMacaroonPath": "<Complete path of the folder containing Boltz admin.macaroon for the node>",
+          "configPath": "<Optional:Path of the .conf if present locally or empty>",
+        },
+        "settings": {
+          "userPersona": "OPERATOR",
+          "themeMode": "DAY",
+          "themeColor": "PURPLE",
+          "channelBackupPath": "C:\\RTL\\backup\\node-1",
+          "bitcoindConfigPath": "<Optional: path of bitcoind.conf path if available locally>",
+          "logLevel": "INFO",
+          "fiatConversion": false,
+          "unannouncedChannels": false,
+          "lnServerUrl": "<url for LND REST APIs for node #1 e.g. https://192.168.0.1:8080>",
+          "swapServerUrl": "<url for swap server REST APIs for the node. e.g. https://127.0.0.1:8081>",
+          "boltzServerUrl": "<url for boltz server REST APIs for the node. e.g. https://127.0.0.1:9003>",
+          "blockExplorerUrl": "<url for local or centralized block explorer. e.g. https://mempool.space>"
+        }
+      }
+    ]
+  }
