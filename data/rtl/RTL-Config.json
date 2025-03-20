@@ -9,7 +9,7 @@
   "nodes": [
     {
       "index": 1,
-      "lnNode": "Node 1",
+      "lnNode": "Farid (lnd6)",
       "lnImplementation": "LND",
       "authentication": {
         "macaroonPath": "/RTL/macaroons"
@@ -18,9 +18,26 @@
         "userPersona": "MERCHANT",
         "themeMode": "DAY",
         "themeColor": "PURPLE",
-        "channelBackupPath": "/RTL/lnd-channel-backup",
+        "channelBackupPath": "/RTL/lnd6-channel-backup",
         "logLevel": "INFO",
         "lnServerUrl": "https://regtest_lnd6_farid:8080",
+        "fiatConversion": false
+      }
+    },
+    {
+      "index": 2,
+      "lnNode": "Grace (eclair7)",
+      "lnImplementation": "ECL",
+      "authentication": {
+        "lnApiPassword": "eclair"
+      },
+      "settings": {
+        "userPersona": "MERCHANT",
+        "themeMode": "DAY",
+        "themeColor": "PURPLE",
+        "channelBackupPath": "/RTL/eclair7-channel-backup",
+        "logLevel": "INFO",
+        "lnServerUrl": "http://eclair7_grace:8080",
         "fiatConversion": false
       }
     }

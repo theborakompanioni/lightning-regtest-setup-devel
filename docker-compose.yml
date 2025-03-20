@@ -535,7 +535,11 @@ services:
     image: shahanafarooqui/rtl:v0.15.4@sha256:f984095949b5b6c2c0c7d983e979cd34bd32a2952d106092bad0b46e6248168e
     restart: unless-stopped
     depends_on:
+      cln0_app:
+        condition: service_healthy
       lnd6_farid:
+        condition: service_healthy
+      eclair7_grace:
         condition: service_healthy
     environment:
       - PORT=3000
