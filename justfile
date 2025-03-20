@@ -454,6 +454,7 @@ init: check-deps
 # Print setup info
 [group("info")]
 info:
+  @echo "farid mint: http://localhost:14338/v1/info"
   @echo "{{BOLD + BLACK + BG_WHITE + UNDERLINE}}# lightning-regtest-setup-devel{{NORMAL}}"
   @echo "{{BOLD + GREEN + UNDERLINE}}## bitcoin{{NORMAL}}"
   @just bitcoin::info
