@@ -446,12 +446,12 @@ init-lightning:
   @just cln0-listchannels
   @just cln::exec {{cln0_container_name}} createrune
 
-# Initialize setup; setup lightning infra and ebill data
+# Initialize setup; init wallets and channels
 [group("setup")]
 init: check-deps
   @just init-lightning
 
-# Initialize setup; setup lightning infra and ebill data
+# Print setup info
 [group("info")]
 info:
   @echo "{{BOLD + BLACK + BG_WHITE + UNDERLINE}}# lightning-regtest-setup-devel{{NORMAL}}"
@@ -466,13 +466,20 @@ info:
   @echo "{{BOLD + MAGENTA}}cln0 getinfo:{{NORMAL}}"
   @just cln::exec {{cln0_container_name}} getinfo | jq \
     | jq '{version, id, alias, num_peers, alias, num_pending_channels, num_active_channels, num_inactive_channels, blockheight, network, fees_collected_msat}'
-
   @echo "{{BOLD + MAGENTA}}cln0 showrunes:{{NORMAL}}"
   @just cln::exec {{cln0_container_name}} showrunes | jq
   @echo "{{BOLD + CYAN + UNDERLINE}}## lnd6{{NORMAL}}{{BOLD + CYAN}}"
+
   @just lnd6-id
   @echo "{{BOLD + CYAN}}lnd6 container name:{{NORMAL}} {{lnd6_container_name}}"
   @echo "{{BOLD + CYAN}}lnd6 rest endpoint:{{NORMAL}} https://localhost:19841"
   @echo "{{BOLD + CYAN}}lnd6 getinfo:{{NORMAL}}"
   @curl --silent --insecure https://localhost:19841/v1/getinfo \
     | jq '{version, identity_pubkey, alias, num_peers, num_pending_channels, num_active_channels, num_inactive_channels, block_height, chains}'
+
+  @just eclair7-id
+  @echo "{{BOLD + CYAN}}eclair7 container name:{{NORMAL}} {{eclair7_container_name}}"
+  @echo "{{BOLD + CYAN}}eclair7 rest endpoint:{{NORMAL}} http://localhost:20080"
+  @echo "{{BOLD + CYAN}}eclair7 getinfo:{{NORMAL}}"
+  @curl --silent --user :eclair --request POST http://localhost:20080/getinfo \
+    | jq '{version, nodeId, alias, blockHeight, chainHash, network}'
