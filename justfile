@@ -88,7 +88,7 @@ docker-exec +command: check-docker
 # Create and start containers
 [group("docker")]
 up *args='':
-  @just docker-exec up --detach --wait --wait-timeout 120 {{args}}
+  @just docker-exec up --detach {{args}}
 
 # Stop containers
 [group("docker")]
