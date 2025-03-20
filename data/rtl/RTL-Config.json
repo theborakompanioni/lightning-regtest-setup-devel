@@ -1,0 +1,29 @@
+{
+  "port": "3000",
+  "defaultNodeIndex": 1,
+  "SSO": {
+    "rtlSSO": 0,
+    "rtlCookiePath": "",
+    "logoutRedirectLink": ""
+  },
+  "nodes": [
+    {
+      "index": 1,
+      "lnNode": "Node 1",
+      "lnImplementation": "LND",
+      "authentication": {
+        "macaroonPath": "/RTL/macaroons"
+      },
+      "settings": {
+        "userPersona": "MERCHANT",
+        "themeMode": "DAY",
+        "themeColor": "PURPLE",
+        "channelBackupPath": "/RTL/lnd-channel-backup",
+        "logLevel": "INFO",
+        "lnServerUrl": "https://regtest_lnd6_farid:8080",
+        "fiatConversion": false
+      }
+    }
+  ],
+  "multiPassHashed": "09317fe22ca2985249d900071ed1e7bba89a9eb8120d31f66e7143957e44dbcf"
+}
