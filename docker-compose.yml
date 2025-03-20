@@ -530,6 +530,26 @@ services:
       start_period: 60s
       start_interval: 3s
 
+  rtl:
+    container_name: regtest_rtl
+    image: shahanafarooqui/rtl:v0.15.4@sha256:f984095949b5b6c2c0c7d983e979cd34bd32a2952d106092bad0b46e6248168e
+    restart: unless-stopped
+    depends_on:
+      cln0_app:
+        condition: service_healthy
+      lnd6_farid:
+        condition: service_healthy
+      eclair7_grace:
+        condition: service_healthy
+    environment:
+      - PORT=3000
+      - MACAROON_PATH=/RTL/macaroons/
+    ports:
+      - "13000:3000"
+    volumes:
+      - ./data/rtl/RTL-Config.json:/RTL/RTL-Config.json
+      - ./data/rtl/macaroons/admin.macaroon:/RTL/macaroons/admin.macaroon
+
 volumes:
   bitcoind-data:
   postgres-data:
