@@ -381,7 +381,7 @@ probe-payment-cln0-eclair7:
   echo "HEALTHCHECK PAYMENT SUCCESS (cln0<->eclair7)."
 
 
-# Send payments back and forth between cln0<->cln5 and cln1<->lnd6
+# Send payments back and forth between nodes
 [group("health")]
 probe-payment:
   #!/usr/bin/env bash
@@ -393,7 +393,7 @@ probe-payment:
     sleep 3
   done
 
-# Send payments back and forth between cln1<->lnd6
+# Send keysend payments back and forth between cln1<->lnd6
 [private]
 [group("health")]
 probe-keysend-cln1-lnd6:
@@ -403,13 +403,24 @@ probe-keysend-cln1-lnd6:
   just lnd::exec {{lnd6_container_name}} sendpayment --dest $(just cln1-id) --amt 1000 --keysend
   echo "HEALTHCHECK KEYSEND SUCCESS (cln1<->lnd6)."
 
-# Send keysend back and forth between cln1<->cln6
+# Send keysend payments back and forth between lnd6<->eclair7
+[private]
+[group("health")]
+probe-keysend-lnd6-eclair7:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  just lnd::exec {{lnd6_container_name}} sendpayment --dest $(just eclair7-id) --amt 1000 --keysend
+  just eclair::exec {{eclair7_container_name}} sendtonode --nodeId=$(just lnd6-id) --amountMsat=1000
+  echo "HEALTHCHECK KEYSEND SUCCESS (lnd6<->eclair7)."
+
+# Send keysend payments back and forth between nodes
 [group("health")]
 probe-keysend:
   #!/usr/bin/env bash
   set -euxo pipefail
   while true; do
     just probe-keysend-cln1-lnd6
+    just probe-keysend-lnd6-eclair7
     sleep 3
   done
 
