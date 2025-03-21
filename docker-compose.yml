@@ -580,6 +580,9 @@ services:
       - '--channel.max-htlc-value-in-flight-msat=5000000000000' # 50 BTC in msats
       - '--features.keysend=optional'
       - '--printToConsole=true'
+    volumes:
+      - ./data/eclair7_grace/node_seed.dat:/home/eclair/.eclair/node_seed.dat
+      - ./data/eclair7_grace/channel_seed.dat:/home/eclair/.eclair/channel_seed.dat
     ports:
       - "20080:8080"
     healthcheck:
