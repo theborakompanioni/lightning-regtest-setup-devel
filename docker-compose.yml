@@ -193,6 +193,32 @@ services:
       interval: 5s
       retries: 10
 
+  cln1_alice_cdk_mint:
+    container_name: regtest_cln1_alice_cdk_mint
+    image: thesimplekid/cdk-mintd:v0.7.4@sha256:9da05978f0e18a11ff08a2f6494d87bc2efdc1d70f733278f0c5dd4f74db1579
+    restart: unless-stopped
+    depends_on:
+      cln1_alice:
+        condition: service_healthy
+    environment:
+      - CDK_MINTD_URL=https://example.com
+      - CDK_MINTD_LN_BACKEND=fakewallet
+      - CDK_MINTD_LISTEN_HOST=0.0.0.0
+      - CDK_MINTD_LISTEN_PORT=8085
+      - CDK_MINTD_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+      - CDK_MINTD_DATABASE=redb
+      - CDK_MINTD_CACHE_BACKEND=memory
+    command: ["cdk-mintd"]
+    ports:
+      - "18085:8085"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:8085/v1/info || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
+
   lnd6_farid_nutshell_mint:
     container_name: regtest_lnd6_farid_nutshell_mint
     image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
