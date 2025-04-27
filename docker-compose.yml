@@ -672,7 +672,7 @@ services:
       - "13000:3000"
     volumes:
       - ./data/rtl/RTL-Config.json:/RTL/RTL-Config.json
-      - ./data/rtl/macaroons/admin.macaroon:/RTL/macaroons/admin.macaroon
+      - ./data/lnd_common/admin-dummy.macaroon:/RTL/macaroons/admin.macaroon
 
 volumes:
   bitcoind-data:
