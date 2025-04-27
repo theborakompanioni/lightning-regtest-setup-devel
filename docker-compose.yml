@@ -163,6 +163,9 @@ services:
       - '--bitcoin-rpcpassword=alice'
       - '--grpc-host=0.0.0.0'
       - '--grpc-port=19935'
+      - '--clnrest-host=0.0.0.0'
+      - '--clnrest-port=3010'
+      - '--clnrest-swagger-root=/swagger-ui'
       - '--network=regtest'
       - '--log-level=info'
       - '--log-file=/home/clightning/.lightning/regtest/debug.log' # write log file for inspection
@@ -188,6 +191,7 @@ services:
       - ./data/cln_common/regtest/server-key.pem:/home/clightning/.lightning/regtest/server-key.pem
     ports:
       - "19936:19846"
+      - "14010:3010"
     healthcheck:
       test: [ "CMD", "/entrypoint.sh", "lightning-cli", "--network=regtest", "getinfo" ]
       interval: 5s
@@ -212,6 +216,43 @@ services:
     ports:
       - "18085:8085"
 
+  cln1_alice_nutshell_mint:
+    container_name: regtest_cln1_alice_nutshell_mint
+    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    restart: unless-stopped
+    depends_on:
+      cln1_alice:
+        condition: service_healthy
+    links:
+      - "cln1_alice:cln" # ca.pem is valid for DNS "cln" and "localhost"
+    environment:
+      # https://github.com/cashubtc/nutshell/blob/main/.env.example
+      - MINT_LISTEN_HOST=0.0.0.0
+      - MINT_LISTEN_PORT=3338
+      # key from persona "alice#0" (e.g. persona --name alice --account 0)
+      - MINT_PRIVATE_KEY=7eaab2f5e9359badb538722e23e6e65bb0c8265a707d317ec4b132ccd23aeb72
+      - TOR=FALSE
+      - DEBUG=TRUE
+      - MINT_INFO_NAME=Alice CLN1 Nutshell Mint
+      #- MINT_DATABASE=postgres://cashu:cashu@localhost:5432/cashu
+      - MINT_BACKEND_BOLT11_SAT=CLNRestWallet
+      - MINT_CLNREST_URL=https://cln:3010
+      - MINT_CLNREST_CERT=/ca.pem
+      - MINT_CLNREST_RUNE=/dummy.rune
+    command: ["poetry", "run", "mint"]
+    volumes:
+      - ./data/cln_common/regtest/ca.pem:/ca.pem
+      - ./data/cln1_alice/regtest/dummy.rune:/dummy.rune
+    ports:
+      - "13338:3338"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:3338/v1/info || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
+
   lnd6_farid_nutshell_mint:
     container_name: regtest_lnd6_farid_nutshell_mint
     image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
@@ -223,7 +264,8 @@ services:
       # https://github.com/cashubtc/nutshell/blob/main/.env.example
       - MINT_LISTEN_HOST=0.0.0.0
       - MINT_LISTEN_PORT=3338
-      - MINT_PRIVATE_KEY=TEST_PRIVATE_KEY
+      # key from persona "farid#0" (e.g. persona --name farid --account 0)
+      - MINT_PRIVATE_KEY=86dba776879191422e05665faae11768a0c0695a201964791db0f4a9134e5b17
       - TOR=FALSE
       - DEBUG=TRUE
       - MINT_INFO_NAME=Farid LND6 Nutshell Mint

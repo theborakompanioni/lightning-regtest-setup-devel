@@ -26,6 +26,9 @@ lnd6_lightning_port := '9735'
 eclair7_container_name := 'regtest_eclair7_grace'
 eclair7_lightning_port := '9735'
 
+cln0_dummy_rune := 'vmokJnucN61pUzcwAV0lkyeMnL4Xn-HFb6DxdZIKPTA9MA=='
+cln1_dummy_rune := '5vStnvK-9TiYiYuNvKsqKs-9H_Gka187EzHvYMbwybo9MA=='
+
 # print available targets
 [group("project-agnostic")]
 default:
@@ -262,6 +265,10 @@ cln0-listinvoices:
 cln0-listbalances:
   @just cln0-exec bkpr-listbalances
 
+[group("cln0")]
+cln0-pay bolt11:
+  @just cln0-exec pay {{bolt11}}
+
 [group("lnd6")]
 lnd6-getinfo:
   @just lnd6-exec getinfo
@@ -444,7 +451,8 @@ init-lightning:
   @just bitcoin::mine 1
   @just cln0-waitblockheight 134
   @just cln0-listchannels
-  @just cln::exec {{cln0_container_name}} createrune
+  just cln::exec {{cln0_container_name}} --keywords createrune "rune"={{cln0_dummy_rune}}
+  just cln::exec {{cln1_container_name}} --keywords createrune "rune"={{cln1_dummy_rune}}
 
 # Initialize setup; init wallets and channels
 [group("setup")]

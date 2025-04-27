@@ -1,0 +1,5 @@
+{
+    "rune": "5vStnvK-9TiYiYuNvKsqKs-9H_Gka187EzHvYMbwybo9MA==",
+    "unique_id": "0",
+    "warning_unrestricted_rune": "WARNING: This rune has no restrictions! Anyone who has access to this rune could drain funds from your node. Be careful when giving this to apps that you don't trust. Consider using the restrictions parameter to only allow access to specific rpc methods."
+}
