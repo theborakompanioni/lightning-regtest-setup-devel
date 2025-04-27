@@ -4,6 +4,7 @@ mod bitcoin
 mod cln
 mod lnd
 mod eclair
+mod nutshell
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -25,6 +26,8 @@ lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
 eclair7_container_name := 'regtest_eclair7_grace'
 eclair7_lightning_port := '9735'
+
+nutshell6_container_name := 'regtest_lnd6_farid_nutshell_wallet'
 
 cln0_dummy_rune := 'vmokJnucN61pUzcwAV0lkyeMnL4Xn-HFb6DxdZIKPTA9MA=='
 cln1_dummy_rune := '5vStnvK-9TiYiYuNvKsqKs-9H_Gka187EzHvYMbwybo9MA=='
@@ -245,6 +248,10 @@ lnd6-fundchannel-cln3 amount_sat='4194303' push_sat='2097151':
 lnd6-fundchannel-eclair7 amount_sat='2097151' push_sat='1048575':
   just lnd::openchannel {{lnd6_container_name}} $(just eclair7-id) {{amount_sat}} {{push_sat}}
 
+[group("lnd6")]
+lnd6-getinfo:
+  @just lnd6-exec getinfo
+
 [group("cln0")]
 cln0-help:
   @just cln0-exec help
@@ -268,10 +275,6 @@ cln0-listbalances:
 [group("cln0")]
 cln0-pay bolt11:
   @just cln0-exec pay {{bolt11}}
-
-[group("lnd6")]
-lnd6-getinfo:
-  @just lnd6-exec getinfo
 
 [group("cln0")]
 cln0-listchannels:
@@ -300,6 +303,31 @@ cln0-sendtx destination amount_sat='21000' *args='':
 [group("cln0")]
 cln0-listfunds spent='false':
   @just cln0-exec --keywords --json listfunds "spent"={{spent}}
+
+# Execute a command on instance "nutshell6"
+[group("nutshell6")]
+nutshell6-exec +command:
+  @just nutshell::exec {{nutshell6_container_name}} {{command}}
+
+[group("nutshell6")]
+nutshell6-invoice amount='21':
+  @just nutshell::invoice {{nutshell6_container_name}} {{amount}}
+
+[group("nutshell6")]
+nutshell6-balance:
+  @just nutshell::balance {{nutshell6_container_name}}
+
+[group("nutshell6")]
+nutshell6-selfpay:
+  @just nutshell::selfpay {{nutshell6_container_name}}
+
+[group("nutshell6")]
+nutshell6-mint-pending-invoices:
+  @just nutshell::mint-pending-invoices {{nutshell6_container_name}}
+
+[group("nutshell6")]
+nutshell6-pay invoice:
+  @just nutshell::pay {{nutshell6_container_name}} {{invoice}}
 
 [private]
 [group("setup")]
