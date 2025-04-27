@@ -15,7 +15,7 @@
         "macaroonPath": "/RTL/macaroons"
       },
       "settings": {
-        "userPersona": "MERCHANT",
+        "userPersona": "OPERATOR",
         "themeMode": "DAY",
         "themeColor": "PURPLE",
         "channelBackupPath": "/RTL/lnd6-channel-backup",
@@ -32,9 +32,9 @@
         "lnApiPassword": "eclair"
       },
       "settings": {
-        "userPersona": "MERCHANT",
+        "userPersona": "OPERATOR",
         "themeMode": "DAY",
-        "themeColor": "PURPLE",
+        "themeColor": "TEAL",
         "channelBackupPath": "/RTL/eclair7-channel-backup",
         "logLevel": "INFO",
         "lnServerUrl": "http://eclair7_grace:8080",

@@ -22,9 +22,9 @@
           "configPath": "<Optional:Path of the .conf if present locally or empty>",
         },
         "settings": {
-          "userPersona": "OPERATOR",
-          "themeMode": "DAY",
-          "themeColor": "PURPLE",
+          "userPersona": "<User persona to tailor the data on UI. Allowed values MERCHANT/OPERATOR. Default MERCHANT, Optional>",
+          "themeMode": "<Theme modes, Allowed values DAY, NIGHT. Default DAY, Optional>",
+          "themeColor": "<Theme colors, Allowed values PURPLE, TEAL, INDIGO, PINK, YELLOW. Default PURPLE, Optional>",
           "channelBackupPath": "C:\\RTL\\backup\\node-1",
           "bitcoindConfigPath": "<Optional: path of bitcoind.conf path if available locally>",
           "logLevel": "INFO",
