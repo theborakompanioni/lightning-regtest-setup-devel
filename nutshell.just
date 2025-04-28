@@ -1,5 +1,4 @@
 
-
 # Execute a cashu (nutshell wallet) command
 [private]
 [group("nutshell")]
@@ -36,8 +35,7 @@ mint-pending-invoices container_name:
 list-pending-invoices container_name:
   @just nutshell::exec {{container_name}} invoices --pending
 
-
-# List pending invoices.
+# Pay a lightning invoice.
 [private]
 [group("nutshell")]
 pay container_name invoice:
