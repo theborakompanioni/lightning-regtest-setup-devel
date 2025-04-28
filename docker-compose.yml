@@ -197,24 +197,24 @@ services:
       interval: 5s
       retries: 10
 
-  cln1_alice_cdk_mint: #this is not working, use cdk with lnd and nutshell with cln if possible
-    container_name: regtest_cln1_alice_cdk_mint
-    image: thesimplekid/cdk-mintd:v0.7.4@sha256:9da05978f0e18a11ff08a2f6494d87bc2efdc1d70f733278f0c5dd4f74db1579
-    restart: unless-stopped
-    depends_on:
-      cln1_alice:
-        condition: service_healthy
-    environment:
-      - CDK_MINTD_URL=https://example.com
-      - CDK_MINTD_LN_BACKEND=fakewallet
-      - CDK_MINTD_LISTEN_HOST=0.0.0.0
-      - CDK_MINTD_LISTEN_PORT=8085
-      - CDK_MINTD_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
-      - CDK_MINTD_DATABASE=redb
-      - CDK_MINTD_CACHE_BACKEND=memory
-    command: ["cdk-mintd"]
-    ports:
-      - "18085:8085"
+  #cln1_alice_cdk_mint: #this is not working, use cdk with lnd and nutshell with cln if possible
+  #  container_name: regtest_cln1_alice_cdk_mint
+  #  image: thesimplekid/cdk-mintd:v0.7.4@sha256:9da05978f0e18a11ff08a2f6494d87bc2efdc1d70f733278f0c5dd4f74db1579
+  #  restart: unless-stopped
+  #  depends_on:
+  #    cln1_alice:
+  #      condition: service_healthy
+  #  environment:
+  #    - CDK_MINTD_URL=https://example.com
+  #    - CDK_MINTD_LN_BACKEND=fakewallet
+  #    - CDK_MINTD_LISTEN_HOST=0.0.0.0
+  #    - CDK_MINTD_LISTEN_PORT=8085
+  #    - CDK_MINTD_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+  #    - CDK_MINTD_DATABASE=redb
+  #    - CDK_MINTD_CACHE_BACKEND=memory
+  #  command: ["cdk-mintd"]
+  #  ports:
+  #    - "18085:8085"
 
   cln1_alice_nutshell_mint:
     container_name: regtest_cln1_alice_nutshell_mint
