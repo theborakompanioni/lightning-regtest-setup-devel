@@ -9,6 +9,40 @@
   "nodes": [
     {
       "index": 1,
+      "lnNode": "App (cln0)",
+      "lnImplementation": "CLN",
+      "authentication": {
+        "runePath": "/cln0-dummy.rune"
+      },
+      "settings": {
+        "userPersona": "OPERATOR",
+        "themeMode": "DAY",
+        "themeColor": "PURPLE",
+        "channelBackupPath": "/RTL/cln0-channel-backup",
+        "logLevel": "INFO",
+        "lnServerUrl": "https://regtest_cln0_app:3010",
+        "fiatConversion": false
+      }
+    },
+    {
+      "index": 2,
+      "lnNode": "Alice (cln1)",
+      "lnImplementation": "CLN",
+      "authentication": {
+        "runePath": "/cln1-dummy.rune"
+      },
+      "settings": {
+        "userPersona": "OPERATOR",
+        "themeMode": "DAY",
+        "themeColor": "TEAL",
+        "channelBackupPath": "/RTL/cln1-channel-backup",
+        "logLevel": "INFO",
+        "lnServerUrl": "https://regtest_cln1_alice:3010",
+        "fiatConversion": false
+      }
+    },
+    {
+      "index": 3,
       "lnNode": "Farid (lnd6)",
       "lnImplementation": "LND",
       "authentication": {
@@ -17,7 +51,7 @@
       "settings": {
         "userPersona": "OPERATOR",
         "themeMode": "DAY",
-        "themeColor": "PURPLE",
+        "themeColor": "PINK",
         "channelBackupPath": "/RTL/lnd6-channel-backup",
         "logLevel": "INFO",
         "lnServerUrl": "https://regtest_lnd6_farid:8080",
@@ -25,7 +59,7 @@
       }
     },
     {
-      "index": 2,
+      "index": 4,
       "lnNode": "Grace (eclair7)",
       "lnImplementation": "ECL",
       "authentication": {
@@ -34,7 +68,7 @@
       "settings": {
         "userPersona": "OPERATOR",
         "themeMode": "DAY",
-        "themeColor": "TEAL",
+        "themeColor": "YELLOW",
         "channelBackupPath": "/RTL/eclair7-channel-backup",
         "logLevel": "INFO",
         "lnServerUrl": "http://eclair7_grace:8080",

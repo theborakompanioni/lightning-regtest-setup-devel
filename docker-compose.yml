@@ -273,11 +273,12 @@ services:
       - MINT_BACKEND_BOLT11_SAT=LndRestWallet
       - MINT_LND_REST_ENDPOINT=https://regtest_lnd6_farid:8080
       - MINT_LND_REST_CERT=/tls.cert
-      - MINT_LND_REST_MACAROON=/tls.cert # use dummy file; we run lnd with `--no-macaroons` at the moment
+      - MINT_LND_REST_MACAROON=/admin-dummy.macaroon # use dummy file; we run lnd with `--no-macaroons` at the moment
       - MINT_LND_REST_CERT_VERIFY=False # otherwise fails with: `certificate verify failed: Hostname mismatch, certificate is not valid for 'regtest_lnd6_farid'.`
     command: ["poetry", "run", "mint"]
     volumes:
       - ./data/lnd_common/tls.cert:/tls.cert
+      - ./data/lnd_common/admin-dummy.macaroon:/admin-dummy.macaroon
     ports:
       - "14338:3338"
     healthcheck:
@@ -661,18 +662,21 @@ services:
     depends_on:
       cln0_app:
         condition: service_healthy
+      cln1_alice:
+        condition: service_healthy
       lnd6_farid:
         condition: service_healthy
       eclair7_grace:
         condition: service_healthy
     environment:
       - PORT=3000
-      - MACAROON_PATH=/RTL/macaroons/
     ports:
       - "13000:3000"
     volumes:
       - ./data/rtl/RTL-Config.json:/RTL/RTL-Config.json
       - ./data/lnd_common/admin-dummy.macaroon:/RTL/macaroons/admin.macaroon
+      - ./data/cln0_app/regtest/dummy.rtl.rune:/cln0-dummy.rune
+      - ./data/cln1_alice/regtest/dummy.rtl.rune:/cln1-dummy.rune
 
 volumes:
   bitcoind-data:
