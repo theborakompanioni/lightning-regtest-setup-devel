@@ -678,6 +678,27 @@ services:
       - ./data/cln0_app/regtest/dummy.rtl.rune:/cln0-dummy.rune
       - ./data/cln1_alice/regtest/dummy.rtl.rune:/cln1-dummy.rune
 
+  btc-rpc-explorer:
+    container_name: regtest_explorer
+    image: getumbrel/btc-rpc-explorer:v3.4.0@sha256:e85a1fe80919d308b1f80de2dc7174e7b61ec79384d695304fbf259b67b53594
+    restart: unless-stopped
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+    environment:
+      BTCEXP_HOST: 0.0.0.0
+      BTCEXP_PORT: 3002
+      BTCEXP_BITCOIND_HOST: bitcoind
+      BTCEXP_BITCOIND_PORT: 18443
+      BTCEXP_BITCOIND_USER: regtest
+      BTCEXP_BITCOIND_PASS: regtest
+      # BTCEXP_BASIC_AUTH_PASSWORD: test
+      BTCEXP_PRIVACY_MODE: 'true'
+      BTCEXP_NO_RATES: 'true'
+      BTCEXP_RPC_ALLOWALL: 'true'
+    ports:
+      - "13001:3002"
+
 volumes:
   bitcoind-data:
   postgres-data:
