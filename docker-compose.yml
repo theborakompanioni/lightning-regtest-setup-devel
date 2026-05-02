@@ -218,7 +218,7 @@ services:
 
   cln1_alice_nutshell_mint:
     container_name: regtest_cln1_alice_nutshell_mint
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    image: cashubtc/nutshell:0.20.0@sha256:fae7b126ecc2ca797f3f572e5e86b3623bda26fdee0f97489ea9e3d09089950b
     restart: unless-stopped
     depends_on:
       cln1_alice:
@@ -255,7 +255,7 @@ services:
 
   lnd6_farid_nutshell_mint:
     container_name: regtest_lnd6_farid_nutshell_mint
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    image: cashubtc/nutshell:0.20.0@sha256:fae7b126ecc2ca797f3f572e5e86b3623bda26fdee0f97489ea9e3d09089950b
     restart: unless-stopped
     depends_on:
       lnd6_farid:
@@ -291,7 +291,7 @@ services:
 
   lnd6_farid_nutshell_wallet:
     container_name: regtest_lnd6_farid_nutshell_wallet
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    image: cashubtc/nutshell:0.20.0@sha256:fae7b126ecc2ca797f3f572e5e86b3623bda26fdee0f97489ea9e3d09089950b
     restart: unless-stopped
     depends_on:
       lnd6_farid_nutshell_mint:
