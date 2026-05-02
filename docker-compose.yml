@@ -657,7 +657,7 @@ services:
 
   rtl:
     container_name: regtest_rtl
-    image: shahanafarooqui/rtl:v0.15.4@sha256:f984095949b5b6c2c0c7d983e979cd34bd32a2952d106092bad0b46e6248168e
+    image: shahanafarooqui/rtl:v0.15.8@sha256:54131152cba02a968d83fcc89c07426bfb979372f743649ba1e2626426a34dc0
     restart: unless-stopped
     depends_on:
       cln0_app:
