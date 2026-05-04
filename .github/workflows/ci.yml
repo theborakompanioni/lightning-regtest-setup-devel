@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, devel ]
+  pull_request:
+    branches: [ master, devel ]
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq uuid-runtime
+
+      - name: Start services
+        run: just up
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for all containers to be healthy/running..."
+          for i in $(seq 1 60); do
+            if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.State != "running")' > /dev/null 2>&1; then
+              echo "Some containers not yet running... (attempt $i/60)"
+              sleep 5
+            else
+              echo "All containers are running."
+              break
+            fi
+          done
+
+      - name: Initialize setup
+        run: just init
+
+      - name: Mine some blocks
+        run: |
+          just bitcoin::mine 10
+          sleep 3
+          just wait-for-block-sync
+
+      - name: Setup peers
+        run: |
+          just setup-connect-peers
+          just init # re-run init to ensure all nodes have the latest block info (should not be necessary but just to be safe)
+
+      - name: Mine some blocks
+        run: |
+          just bitcoin::mine 10
+          sleep 3
+          just wait-for-block-sync
+
+      - name: Print into
+        run: just info
+
+      - name: cln0 getinfo
+        run: just cln0-getinfo
+
+      - name: lnd6 getinfo
+        run: just lnd6-getinfo
+
+      - name: Probe payment cln0 to cln5
+        run: just probe-payment-cln0-cln5
+
+      - name: Probe payment cln1 to lnd6
+        run: just probe-payment-cln1-lnd6
+
+      - name: Probe payment cln0 to eclair7
+        run: just probe-payment-cln0-eclair7
+
+      - name: Probe keysend cln1 to lnd6
+        run: just probe-keysend-cln1-lnd6
+
+      - name: Probe keysend lnd6 to eclair7
+        run: just probe-keysend-lnd6-eclair7
+
+      - name: Collect logs on failure
+        if: failure()
+        run: docker compose --file ./docker-compose.yml logs
+
+      - name: Cleanup
+        if: always()
+        run: just clean

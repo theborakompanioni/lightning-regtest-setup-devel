@@ -362,7 +362,6 @@ setup-create-channels:
   @just lnd6-fundchannel-eclair7
 
 # Send payments back and forth cln0<->cln5
-[private]
 [group("health")]
 probe-payment-cln0-cln5:
   #!/usr/bin/env bash
@@ -381,7 +380,6 @@ probe-payment-cln0-cln5:
   echo "HEALTHCHECK PAYMENT SUCCESS (cln0<->cln5)."
 
 # Send payments back and forth between cln1<->lnd6
-[private]
 [group("health")]
 probe-payment-cln1-lnd6:
   #!/usr/bin/env bash
@@ -398,7 +396,6 @@ probe-payment-cln1-lnd6:
   echo "HEALTHCHECK PAYMENT SUCCESS (cln1<->lnd6)."
 
   # Send payments back and forth cln0<->eclair7
-[private]
 [group("health")]
 probe-payment-cln0-eclair7:
   #!/usr/bin/env bash
@@ -429,7 +426,6 @@ probe-payment:
   done
 
 # Send keysend payments back and forth between cln1<->lnd6
-[private]
 [group("health")]
 probe-keysend-cln1-lnd6:
   #!/usr/bin/env bash
@@ -439,7 +435,6 @@ probe-keysend-cln1-lnd6:
   echo "HEALTHCHECK KEYSEND SUCCESS (cln1<->lnd6)."
 
 # Send keysend payments back and forth between lnd6<->eclair7
-[private]
 [group("health")]
 probe-keysend-lnd6-eclair7:
   #!/usr/bin/env bash
@@ -458,6 +453,58 @@ probe-keysend:
     just probe-keysend-lnd6-eclair7
     sleep 3
   done
+
+# Wait for all lightning nodes to be synced to the latest bitcoin block height
+[group("health")]
+wait-for-block-sync timeout='60':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  BLOCK_HEIGHT=$(just bitcoin::exec getblockcount | tr -d '[:space:]')
+  echo "Current bitcoin block height: ${BLOCK_HEIGHT}"
+  echo "Waiting for all nodes to sync to block ${BLOCK_HEIGHT} (timeout: {{timeout}}s)..."
+
+  # CLN nodes support waitblockheight natively
+  for cln in {{cln0_container_name}} {{cln1_container_name}} {{cln2_container_name}} {{cln3_container_name}} {{cln4_container_name}} {{cln5_container_name}}; do
+    echo "Waiting for ${cln}..."
+    just cln::exec "${cln}" --keywords waitblockheight "blockheight"="${BLOCK_HEIGHT}" "timeout"={{timeout}}
+    echo "${cln} synced."
+  done
+
+  # LND: poll getinfo until block_height matches
+  for lnd in {{lnd6_container_name}}; do
+    echo "Waiting for ${lnd}..."
+    for i in $(seq 1 {{timeout}}); do
+      LND_HEIGHT=$(just lnd::exec "${lnd}" getinfo | jq --raw-output .block_height)
+      if [ "${LND_HEIGHT}" -ge "${BLOCK_HEIGHT}" ]; then
+        echo "${lnd} synced."
+        break
+      fi
+      if [ "$i" -eq {{timeout}} ]; then
+        echo "Timeout waiting for ${lnd} to reach block ${BLOCK_HEIGHT} (at ${LND_HEIGHT})."
+        exit 1
+      fi
+      sleep 1
+    done
+  done
+
+  # Eclair: poll getinfo until blockHeight matches
+  for eclair in {{eclair7_container_name}}; do
+    echo "Waiting for ${eclair}..."
+    for i in $(seq 1 {{timeout}}); do
+      ECLAIR_HEIGHT=$(just eclair::exec "${eclair}" getinfo | jq --raw-output .blockHeight)
+      if [ "${ECLAIR_HEIGHT}" -ge "${BLOCK_HEIGHT}" ]; then
+        echo "${eclair} synced."
+        break
+      fi
+      if [ "$i" -eq {{timeout}} ]; then
+        echo "Timeout waiting for ${eclair} to reach block ${BLOCK_HEIGHT} (at ${ECLAIR_HEIGHT})."
+        exit 1
+      fi
+      sleep 1
+    done
+  done
+
+  echo "All nodes synced to block ${BLOCK_HEIGHT}."
 
 # Initialize lightning; fund wallets, connect peers and create channels
 [private]
@@ -495,8 +542,8 @@ info:
   @echo "{{BOLD + BLACK + BG_WHITE + UNDERLINE}}# lightning-regtest-setup-devel{{NORMAL}}"
   @echo "{{BOLD + GREEN + UNDERLINE}}## bitcoin{{NORMAL}}"
   @just bitcoin::info
-  @echo "{{BOLD + MAGENTA + UNDERLINE}}## cln0{{NORMAL}}{{BOLD + MAGENTA}}"
 
+  @echo "{{BOLD + MAGENTA + UNDERLINE}}## cln0{{NORMAL}}{{BOLD + MAGENTA}}"
   @just cln0-id
   @echo "{{BOLD + MAGENTA}}cln0 container name:{{NORMAL}} {{cln0_container_name}}"
   @echo "{{BOLD + MAGENTA}}cln0 rest endpoint:{{NORMAL}} https://localhost:13010"
@@ -506,8 +553,8 @@ info:
     | jq '{version, id, alias, num_peers, alias, num_pending_channels, num_active_channels, num_inactive_channels, blockheight, network, fees_collected_msat}'
   @echo "{{BOLD + MAGENTA}}cln0 showrunes:{{NORMAL}}"
   @just cln::exec {{cln0_container_name}} showrunes | jq
-  @echo "{{BOLD + CYAN + UNDERLINE}}## lnd6{{NORMAL}}{{BOLD + CYAN}}"
 
+  @echo "{{BOLD + CYAN + UNDERLINE}}## lnd6{{NORMAL}}{{BOLD + CYAN}}"
   @just lnd6-id
   @echo "{{BOLD + CYAN}}lnd6 container name:{{NORMAL}} {{lnd6_container_name}}"
   @echo "{{BOLD + CYAN}}lnd6 rest endpoint:{{NORMAL}} https://localhost:19841"
@@ -515,9 +562,10 @@ info:
   @curl --silent --insecure https://localhost:19841/v1/getinfo \
     | jq '{version, identity_pubkey, alias, num_peers, num_pending_channels, num_active_channels, num_inactive_channels, block_height, chains}'
 
+  @echo "{{BOLD + YELLOW + UNDERLINE}}## eclair7{{NORMAL}}{{BOLD + YELLOW}}"
   @just eclair7-id
-  @echo "{{BOLD + CYAN}}eclair7 container name:{{NORMAL}} {{eclair7_container_name}}"
-  @echo "{{BOLD + CYAN}}eclair7 rest endpoint:{{NORMAL}} http://localhost:20080"
-  @echo "{{BOLD + CYAN}}eclair7 getinfo:{{NORMAL}}"
+  @echo "{{BOLD + YELLOW}}eclair7 container name:{{NORMAL}} {{eclair7_container_name}}"
+  @echo "{{BOLD + YELLOW}}eclair7 rest endpoint:{{NORMAL}} http://localhost:20080"
+  @echo "{{BOLD + YELLOW}}eclair7 getinfo:{{NORMAL}}"
   @curl --silent --user :eclair --request POST http://localhost:20080/getinfo \
     | jq '{version, nodeId, alias, blockHeight, chainHash, network}'
