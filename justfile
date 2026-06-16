@@ -109,12 +109,17 @@ clean:
 # Build or rebuild services
 [group("docker")]
 build *args='':
-  @just docker-exec build {{args}}
+  @just pull
+  @just docker-exec build --pull {{args}}
 
 # Rebuild services without cache
 [group("docker")]
 rebuild *args='':
   @just build --no-cache {{args}}
+
+[group("docker")]
+pull *args='':
+  @just docker-exec pull {{args}}
 
 # View and follow output from containers
 [group("docker")]
