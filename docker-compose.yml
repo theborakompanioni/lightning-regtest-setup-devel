@@ -601,7 +601,7 @@ services:
 
   eclair7_grace:
     container_name: regtest_eclair7_grace
-    image: polarlightning/eclair:0.11.0@sha256:20e30612035d3d72be7da86e4e8b895dc04ab455a8359c209f73a639c17e27ff
+    image: polarlightning/eclair:0.13.1@sha256:f58d7107452833cd88fb6f6ac892237c19269f23c4a6ef70ec7e1600611897f2
     restart: unless-stopped
     depends_on:
       bitcoind:
