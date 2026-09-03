@@ -427,7 +427,7 @@ services:
 
   cln4_dave:
     container_name: regtest_cln4_dave
-    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
+    image: polarlightning/clightning:24.11.1@sha256:36bdb7d1826b23264863905a85ae93e24548a4db6979420a1cac69e905f4a316
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -477,7 +477,7 @@ services:
 
   cln5_erin:
     container_name: regtest_cln5_erin
-    image: polarlightning/clightning:24.08.1@sha256:d073beb246786c6769f4a17ea4048ee86be0f9fe959bd7928d46a33894fe01f5
+    image: polarlightning/clightning:24.11.1@sha256:36bdb7d1826b23264863905a85ae93e24548a4db6979420a1cac69e905f4a316
     restart: unless-stopped
     depends_on:
       bitcoind:
