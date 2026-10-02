@@ -609,7 +609,7 @@ services:
       postgres:
         condition: service_healthy
       eclair_wallet_init:
-        condition: service_started
+        condition: service_completed_successfully
       cln3_charlie:
         condition: service_healthy 
     command:
@@ -662,13 +662,13 @@ services:
     restart: unless-stopped
     depends_on:
       cln0_app:
-        condition: service_healthy
+        condition: service_started
       cln1_alice:
-        condition: service_healthy
+        condition: service_started
       lnd6_farid:
-        condition: service_healthy
+        condition: service_started
       eclair7_grace:
-        condition: service_healthy
+        condition: service_started
     environment:
       - PORT=3000
     ports:

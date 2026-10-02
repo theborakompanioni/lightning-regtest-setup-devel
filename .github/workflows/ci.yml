@@ -46,7 +46,8 @@ jobs:
       - name: Setup peers
         run: |
           just setup-connect-peers
-          just init # re-run init to ensure all nodes have the latest block info (should not be necessary but just to be safe)
+          echo "Re-run init to ensure all nodes have the latest block info (should not be necessary but reduces CI failures)"
+          just init
 
       - name: Mine some blocks
         run: |

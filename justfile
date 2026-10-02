@@ -101,6 +101,20 @@ up *args='':
 down *args='':
   @just docker-exec down {{args}}
 
+# waits for all containers to be healthy/running...
+[group("docker")]
+wait-for-containers:
+  #!/usr/bin/env sh
+  for i in $(seq 1 60); do
+    if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.State != "running")' > /dev/null 2>&1; then
+      echo "Some containers not yet running... (attempt $i/60)"
+      sleep 5
+    else
+      echo "All containers are running."
+      break
+    fi
+  done
+
 # Stop and remove containers, networks and volumes
 [group("docker")]
 clean:
@@ -538,6 +552,48 @@ init-lightning:
 [group("setup")]
 init: check-deps
   @just init-lightning
+
+# setup and init the network; probe payments between multiple nodes
+[group("test")]
+test-probe-payments: && clean
+  #!/usr/bin/env sh
+
+  echo "Initialize setup..."
+  just up
+
+  echo "Waiting for all containers to be healthy/running..."
+  just wait-for-containers
+
+  echo "Initialize setup..."
+  just init
+
+  echo "Mine some blocks..."
+  just bitcoin::mine 10
+  sleep 3
+  just wait-for-block-sync
+
+  echo "Setup peers..."
+  just setup-connect-peers
+
+  echo "Mine some more blocks..."
+  just bitcoin::mine 10
+  sleep 3
+  just wait-for-block-sync
+
+  echo "Probe payment cln0 to cln5"
+  just probe-payment-cln0-cln5
+
+  echo "Probe payment cln0 to eclair7"
+  just probe-payment-cln0-eclair7
+
+  echo "Probe payment cln1 to lnd6"
+  just probe-payment-cln1-lnd6
+
+  echo "Probe payment lnd6 to eclair7"
+  just probe-keysend-lnd6-eclair7
+
+  echo "Finished!"
+
 
 # Print setup info
 [group("info")]
