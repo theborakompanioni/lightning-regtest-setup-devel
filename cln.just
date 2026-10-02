@@ -15,7 +15,7 @@ id container_name:
 [private]
 [group("cln")]
 newaddr container_name:
-  @just cln::exec {{container_name}} --json newaddr | jq --raw-output .bech32
+  @just cln::exec {{container_name}} --json newaddr all | jq --raw-output '.bech32 // .p2tr' # try bech32, fallback to p2tr
 
 [private]
 [group("cln")]
