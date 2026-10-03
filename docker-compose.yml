@@ -254,6 +254,55 @@ services:
       start_period: 60s
       start_interval: 3s
 
+  # TODO: still in progress: rune must be read from file
+  cln1_alice_lnurlcash_mint:
+    container_name: regtest_cln1_alice_lnurlcash_mint
+    image: lnurlcash/lnurl-mint:0.12.2@sha256:021f601364a0fda10b4350d11ced0802ecfe0a8fc73774de0ae3f4632c0bf19a
+    restart: unless-stopped
+    depends_on:
+      cln1_alice:
+        condition: service_healthy
+    links:
+      - "cln1_alice:cln" # ca.pem is valid for DNS "cln" and "localhost"
+    environment:
+      # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
+      - FUNDINGSOURCE_BACKEND=cln
+      - FUNDINGSOURCE_URL=https://cln:3010
+      - FUNDINGSOURCE_RUNE_PATH=/dummy.rune
+      - FUNDINGSOURCE_CERT_PATH=/ca.pem
+      - BASE_URL=https://localhost:18111
+      - TITLE=cln1-alice-lnurlcash-mint
+      - DESCRIPTION=A minimal lnurlcash mint.
+    volumes:
+      - ./data/cln_common/regtest/ca.pem:/ca.pem
+      - ./data/cln1_alice/regtest/dummy.rune:/dummy.rune
+    ports:
+      - "18111:8111"
+
+  lnd6_farid_lnurlcash_mint:
+    container_name: regtest_lnd6_farid_lnurlcash_mint
+    image: lnurlcash/lnurl-mint:0.12.2@sha256:021f601364a0fda10b4350d11ced0802ecfe0a8fc73774de0ae3f4632c0bf19a
+    restart: unless-stopped
+    depends_on:
+      lnd6_farid:
+        condition: service_healthy
+    links:
+      - "lnd6_farid:2a96fec6bd37" # /tls.cert is valid for DNS "2a96fec6bd37" and "localhost"
+    environment:
+      # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
+      - FUNDINGSOURCE_BACKEND=lnd
+      - FUNDINGSOURCE_URL=https://2a96fec6bd37:8080
+      - FUNDINGSOURCE_MACAROON=deadbeef # use dummy; we run lnd with `--no-macaroons` at the moment
+      - FUNDINGSOURCE_CERT_PATH=/tls.cert
+      - BASE_URL=https://localhost:14111
+      - TITLE=lnd6-farid-lnurlcash-mint
+      - DESCRIPTION=A minimal lnurlcash mint.
+    volumes:
+      - ./data/lnd_common/tls.cert:/tls.cert
+      - ./data/lnd_common/admin-dummy.macaroon:/admin-dummy.macaroon
+    ports:
+      - "14111:8111"
+
   lnd6_farid_nutshell_mint:
     container_name: regtest_lnd6_farid_nutshell_mint
     image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
@@ -555,6 +604,7 @@ services:
       - '--rpclisten=regtest_lnd6_farid:10009'
       - '--rpclisten=localhost:10009' # needed for healthcheck
       - '--tlscertduration=876000h'
+      - '--tlsextradomain=regtest_lnd6_farid'
       #- '--debuglevel=info'
       - '--debuglevel=debug'
       - '--maxpendingchannels=21'
