@@ -360,6 +360,19 @@ lnurlcash1-invoice comment amount='21000':
 lnurlcash1-invoice-zeroes amount='21000':
   @just lnurlcash::invoice-zeroes {{lnurlcash1_base_url}} {{amount}}
 
+[group("lnurlcash1")]
+lnurlcash1-invoice-random amount='21000':
+  just lnurlcash::invoice-random {{lnurlcash1_base_url}} {{amount}}
+
+[group("lnurlcash1")]
+lnurlcash1-make-note amount='21000':
+  #!/usr/bin/env bash
+  SECRET_AND_INVOICE=$(just lnurlcash1-invoice-random {{amount}})
+  INVOICE0_BOLT11=$(echo "${SECRET_AND_INVOICE}" | jq --raw-output .pr )
+  echo "${SECRET_AND_INVOICE}"
+  PAY_RESPONSE=$(just cln0-pay "${INVOICE0_BOLT11}")
+  echo "${PAY_RESPONSE}"
+
 [group("lnurlcash6")]
 lnurlcash6-invoice comment amount='21000':
   @just lnurlcash::invoice {{lnurlcash6_base_url}} {{comment}} {{amount}}
@@ -367,6 +380,19 @@ lnurlcash6-invoice comment amount='21000':
 [group("lnurlcash6")]
 lnurlcash6-invoice-zeroes amount='21000':
   @just lnurlcash::invoice-zeroes {{lnurlcash6_base_url}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-invoice-random amount='21000':
+  just lnurlcash::invoice-random {{lnurlcash6_base_url}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-make-note amount='21000':
+  #!/usr/bin/env bash
+  SECRET_AND_INVOICE=$(just lnurlcash6-invoice-random {{amount}})
+  INVOICE0_BOLT11=$(echo "${SECRET_AND_INVOICE}" | jq --raw-output .pr )
+  echo "${SECRET_AND_INVOICE}"
+  PAY_RESPONSE=$(just cln0-pay "${INVOICE0_BOLT11}")
+  echo "${PAY_RESPONSE}"
 
 [private]
 [group("setup")]
