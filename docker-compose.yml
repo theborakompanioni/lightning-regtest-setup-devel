@@ -265,6 +265,7 @@ services:
     links:
       - "cln1_alice:cln" # ca.pem is valid for DNS "cln" and "localhost"
     environment:
+      - PORT=8111
       # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
       - FUNDINGSOURCE_BACKEND=cln
       - FUNDINGSOURCE_URL=https://cln:3010
@@ -277,7 +278,7 @@ services:
       - ./data/cln_common/regtest/ca.pem:/ca.pem
       - ./data/cln1_alice/regtest/dummy.rune:/dummy.rune
     ports:
-      - "18111:8111"
+      - "11111:8111"
 
   lnd6_farid_lnurlcash_mint:
     container_name: regtest_lnd6_farid_lnurlcash_mint
@@ -289,6 +290,7 @@ services:
     links:
       - "lnd6_farid:2a96fec6bd37" # /tls.cert is valid for DNS "2a96fec6bd37" and "localhost"
     environment:
+      - PORT=8111
       # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
       - FUNDINGSOURCE_BACKEND=lnd
       - FUNDINGSOURCE_URL=https://2a96fec6bd37:8080
@@ -301,7 +303,7 @@ services:
       - ./data/lnd_common/tls.cert:/tls.cert
       - ./data/lnd_common/admin-dummy.macaroon:/admin-dummy.macaroon
     ports:
-      - "14111:8111"
+      - "16111:8111"
 
   lnd6_farid_nutshell_mint:
     container_name: regtest_lnd6_farid_nutshell_mint

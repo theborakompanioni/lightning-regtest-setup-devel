@@ -5,6 +5,7 @@ mod cln
 mod lnd
 mod eclair
 mod nutshell
+mod lnurlcash
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -26,6 +27,9 @@ lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
 eclair7_container_name := 'regtest_eclair7_grace'
 eclair7_lightning_port := '9735'
+
+lnurlcash1_base_url := 'http://localhost:11111'
+lnurlcash6_base_url := 'http://localhost:16111'
 
 nutshell6_container_name := 'regtest_lnd6_farid_nutshell_wallet'
 
@@ -347,6 +351,22 @@ nutshell6-mint-pending-invoices:
 [group("nutshell6")]
 nutshell6-pay invoice:
   @just nutshell::pay {{nutshell6_container_name}} {{invoice}}
+
+[group("lnurlcash1")]
+lnurlcash1-invoice comment amount='21000':
+  @just lnurlcash::invoice {{lnurlcash1_base_url}} {{comment}} {{amount}}
+
+[group("lnurlcash1")]
+lnurlcash1-invoice-zeroes amount='21000':
+  @just lnurlcash::invoice-zeroes {{lnurlcash1_base_url}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-invoice comment amount='21000':
+  @just lnurlcash::invoice {{lnurlcash6_base_url}} {{comment}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-invoice-zeroes amount='21000':
+  @just lnurlcash::invoice-zeroes {{lnurlcash6_base_url}} {{amount}}
 
 [private]
 [group("setup")]
