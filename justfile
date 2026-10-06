@@ -110,7 +110,7 @@ down *args='':
 wait-for-containers:
   #!/usr/bin/env sh
   for i in $(seq 1 60); do
-    if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.State != "running")' > /dev/null 2>&1; then
+    if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.Health != "healthy")' > /dev/null 2>&1; then
       echo "Some containers not yet running... (attempt $i/60)"
       sleep 5
     else
@@ -596,12 +596,12 @@ init-lightning:
 
 # Initialize setup; init wallets and channels
 [group("setup")]
-init: check-deps
+init: check-deps up wait-for-containers
   @just init-lightning
 
 # setup and init the network; probe payments between multiple nodes
 [group("test")]
-test-probe-payments: && clean
+test-probe-payments: check-deps && clean
   #!/usr/bin/env sh
 
   echo "Initialize setup..."
