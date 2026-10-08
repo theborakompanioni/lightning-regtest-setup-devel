@@ -14,6 +14,6 @@ payload="{\
         \"load_on_startup\":true\
     }\
 }"
-curl --silent --user "${_BTC_USER}" --data-binary "${payload}" "${_BTC_URL}" > /dev/null 2>&1
+curl --fail --silent --user "${_BTC_USER}" --data-binary "${payload}" "${_BTC_URL}" > /dev/null 2>&1
 
 echo "Successfully created ${WALLET_NAME}."

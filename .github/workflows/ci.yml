@@ -25,7 +25,7 @@ jobs:
         run: |
           echo "Waiting for all containers to be healthy/running..."
           for i in $(seq 1 60); do
-            if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.State != "running")' > /dev/null 2>&1; then
+            if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.Health != "healthy")' > /dev/null 2>&1; then
               echo "Some containers not yet running... (attempt $i/60)"
               sleep 5
             else

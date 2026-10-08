@@ -5,6 +5,7 @@ mod cln
 mod lnd
 mod eclair
 mod nutshell
+mod lnurlcash
 
 # Load environment variables from `.env` file.
 set dotenv-load
@@ -26,6 +27,9 @@ lnd6_container_name := 'regtest_lnd6_farid'
 lnd6_lightning_port := '9735'
 eclair7_container_name := 'regtest_eclair7_grace'
 eclair7_lightning_port := '9735'
+
+lnurlcash1_base_url := 'http://localhost:11111'
+lnurlcash6_base_url := 'http://localhost:16111'
 
 nutshell6_container_name := 'regtest_lnd6_farid_nutshell_wallet'
 
@@ -106,7 +110,7 @@ down *args='':
 wait-for-containers:
   #!/usr/bin/env sh
   for i in $(seq 1 60); do
-    if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.State != "running")' > /dev/null 2>&1; then
+    if docker compose --file ./docker-compose.yml ps --format json | jq -e 'select(.Health != "healthy")' > /dev/null 2>&1; then
       echo "Some containers not yet running... (attempt $i/60)"
       sleep 5
     else
@@ -150,10 +154,24 @@ ps *args='':
 cln0-exec +command:
   @just cln::exec {{cln0_container_name}} {{command}}
 
-[private]
+# Execute a command on instance "cln1"
+[group("cln1")]
+cln1-exec +command:
+  @just cln::exec {{cln1_container_name}} {{command}}
+
+[group("cln1")]
+cln1-invoice amount_msat='1000' label=uuid():
+  @just cln::create-invoice {{cln1_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
+
+# Execute a command on instance "cln3"
 [group("cln3")]
 cln3-exec +command:
   @just cln::exec {{cln3_container_name}} {{command}}
+
+[group("cln3")]
+cln3-invoice amount_msat='1000' label=uuid():
+  @just cln::create-invoice {{cln3_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
+
 
 # Execute a command on instance "lnd6"
 [group("lnd6")]
@@ -347,6 +365,48 @@ nutshell6-mint-pending-invoices:
 [group("nutshell6")]
 nutshell6-pay invoice:
   @just nutshell::pay {{nutshell6_container_name}} {{invoice}}
+
+[group("lnurlcash1")]
+lnurlcash1-invoice comment amount='21000':
+  @just lnurlcash::invoice {{lnurlcash1_base_url}} {{comment}} {{amount}}
+
+[group("lnurlcash1")]
+lnurlcash1-invoice-zeroes amount='21000':
+  @just lnurlcash::invoice-zeroes {{lnurlcash1_base_url}} {{amount}}
+
+[group("lnurlcash1")]
+lnurlcash1-invoice-random amount='21000':
+  just lnurlcash::invoice-random {{lnurlcash1_base_url}} {{amount}}
+
+[group("lnurlcash1")]
+lnurlcash1-make-note amount='21000':
+  #!/usr/bin/env bash
+  SECRET_AND_INVOICE=$(just lnurlcash1-invoice-random {{amount}})
+  INVOICE0_BOLT11=$(echo "${SECRET_AND_INVOICE}" | jq --raw-output .pr )
+  echo "${SECRET_AND_INVOICE}"
+  PAY_RESPONSE=$(just cln0-pay "${INVOICE0_BOLT11}")
+  echo "${PAY_RESPONSE}"
+
+[group("lnurlcash6")]
+lnurlcash6-invoice comment amount='21000':
+  @just lnurlcash::invoice {{lnurlcash6_base_url}} {{comment}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-invoice-zeroes amount='21000':
+  @just lnurlcash::invoice-zeroes {{lnurlcash6_base_url}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-invoice-random amount='21000':
+  just lnurlcash::invoice-random {{lnurlcash6_base_url}} {{amount}}
+
+[group("lnurlcash6")]
+lnurlcash6-make-note amount='21000':
+  #!/usr/bin/env bash
+  SECRET_AND_INVOICE=$(just lnurlcash6-invoice-random {{amount}})
+  INVOICE0_BOLT11=$(echo "${SECRET_AND_INVOICE}" | jq --raw-output .pr )
+  echo "${SECRET_AND_INVOICE}"
+  PAY_RESPONSE=$(just cln0-pay "${INVOICE0_BOLT11}")
+  echo "${PAY_RESPONSE}"
 
 [private]
 [group("setup")]
@@ -550,12 +610,12 @@ init-lightning:
 
 # Initialize setup; init wallets and channels
 [group("setup")]
-init: check-deps
+init: check-deps up wait-for-containers
   @just init-lightning
 
 # setup and init the network; probe payments between multiple nodes
 [group("test")]
-test-probe-payments: && clean
+test-probe-payments: check-deps && clean
   #!/usr/bin/env sh
 
   echo "Initialize setup..."

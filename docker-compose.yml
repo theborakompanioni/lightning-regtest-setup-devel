@@ -2,7 +2,7 @@ services:
   postgres:
     restart: unless-stopped
     container_name: regtest_db
-    image: postgres:18.1-alpine3.21@sha256:44d837eb4c2ed263474a95f0cc24745413c50924df60dd73ed6c4c3e36b84259
+    image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
     volumes:
       - postgres-data:/postgresql_data
       - ./data/pg/init:/docker-entrypoint-initdb.d/
@@ -219,7 +219,7 @@ services:
 
   cln1_alice_nutshell_mint:
     container_name: regtest_cln1_alice_nutshell_mint
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    image: cashubtc/nutshell:0.21.0@sha256:beed25e291357368e35e1698bf2e4645d97ed435232a8f8ff6501c77d67c0b90
     restart: unless-stopped
     depends_on:
       cln1_alice:
@@ -254,13 +254,121 @@ services:
       start_period: 60s
       start_interval: 3s
 
-  lnd6_farid_nutshell_mint:
-    container_name: regtest_lnd6_farid_nutshell_mint
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+  # TODO: still in progress: rune must be read from file
+  cln1_alice_lnurlcash_mint:
+    container_name: regtest_cln1_alice_lnurlcash_mint
+    image: lnurlcash/lnurl-mint:0.12.2@sha256:021f601364a0fda10b4350d11ced0802ecfe0a8fc73774de0ae3f4632c0bf19a
+    restart: unless-stopped
+    depends_on:
+      cln1_alice:
+        condition: service_healthy
+    links:
+      - "cln1_alice:cln" # ca.pem is valid for DNS "cln" and "localhost"
+    environment:
+      - PORT=8111
+      # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
+      - FUNDINGSOURCE_BACKEND=cln
+      - FUNDINGSOURCE_URL=https://cln:3010
+      - FUNDINGSOURCE_RUNE_PATH=/dummy.rune
+      - FUNDINGSOURCE_CERT_PATH=/ca.pem
+      # link to reverse proxy (sets cors headers for local access via frontent on https://mint.lnurlcash.com)
+      - BASE_URL=http://localhost:11112
+      - TITLE=cln1-alice-lnurlcash-mint
+      - DESCRIPTION=A minimal lnurlcash mint.
+    volumes:
+      - ./data/cln_common/regtest/ca.pem:/ca.pem
+      - ./data/cln1_alice/regtest/dummy.rune:/dummy.rune
+    ports:
+      - "11111:8111"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8111/.well-known/lnurlp/_')\" || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
+
+  cln1_alice_lnurlcash_mint_proxy:
+    container_name: regtest_cln1_alice_lnurlcash_mint_proxy
+    image: caddy:2.11.6-alpine@sha256:d44355d3c2149dc580ce2cac735955d1c08d3d00882c30489c241aa51a5c10d9
+    depends_on:
+      cln1_alice_lnurlcash_mint:
+        condition: service_healthy
+    links:
+      - "cln1_alice_lnurlcash_mint:app"
+    ports:
+      - "11112:8080"
+      - "11113:8443"
+    volumes:
+      - ./data/lnurlcash_common/Caddyfile:/etc/caddy/Caddyfile:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/.well-known/lnurlp/_ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  lnd6_farid_lnurlcash_mint:
+    container_name: regtest_lnd6_farid_lnurlcash_mint
+    image: lnurlcash/lnurl-mint:0.12.2@sha256:021f601364a0fda10b4350d11ced0802ecfe0a8fc73774de0ae3f4632c0bf19a
     restart: unless-stopped
     depends_on:
       lnd6_farid:
         condition: service_healthy
+    links:
+      - "lnd6_farid:2a96fec6bd37" # /tls.cert is valid for DNS "2a96fec6bd37" and "localhost"
+    environment:
+      - PORT=8111
+      # https://github.com/lnurlcash/lnurl-mint/blob/main/.env.example
+      - FUNDINGSOURCE_BACKEND=lnd
+      - FUNDINGSOURCE_URL=https://2a96fec6bd37:8080
+      - FUNDINGSOURCE_MACAROON=deadbeef # use dummy; we run lnd with `--no-macaroons` at the moment
+      - FUNDINGSOURCE_CERT_PATH=/tls.cert
+      - BASE_URL=http://localhost:16111
+      - TITLE=lnd6-farid-lnurlcash-mint
+      - DESCRIPTION=A minimal lnurlcash mint.
+    volumes:
+      - ./data/lnd_common/tls.cert:/tls.cert
+      - ./data/lnd_common/admin-dummy.macaroon:/admin-dummy.macaroon
+    ports:
+      - "16111:8111"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8111/.well-known/lnurlp/_')\" || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
+
+  lnd6_farid_lnurlcash_mint_proxy:
+    container_name: regtest_lnd6_farid_lnurlcash_mint_proxy
+    image: caddy:2.11.6-alpine@sha256:d44355d3c2149dc580ce2cac735955d1c08d3d00882c30489c241aa51a5c10d9
+    depends_on:
+      lnd6_farid_lnurlcash_mint:
+        condition: service_healthy
+    links:
+      - "lnd6_farid_lnurlcash_mint:app"
+    ports:
+      - "16112:8080"
+      - "16113:8443"
+    volumes:
+      - ./data/lnurlcash_common/Caddyfile:/etc/caddy/Caddyfile:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/.well-known/lnurlp/_ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  lnd6_farid_nutshell_mint:
+    container_name: regtest_lnd6_farid_nutshell_mint
+    image: cashubtc/nutshell:0.21.0@sha256:beed25e291357368e35e1698bf2e4645d97ed435232a8f8ff6501c77d67c0b90
+    restart: unless-stopped
+    depends_on:
+      lnd6_farid:
+        condition: service_healthy
+    links:
+      - "lnd6_farid:2a96fec6bd37" # /tls.cert is valid for DNS "2a96fec6bd37" and "localhost"
     environment:
       # https://github.com/cashubtc/nutshell/blob/main/.env.example
       - MINT_LISTEN_HOST=0.0.0.0
@@ -272,10 +380,10 @@ services:
       - MINT_INFO_NAME=Farid LND6 Nutshell Mint
       #- MINT_DATABASE=postgres://cashu:cashu@localhost:5432/cashu
       - MINT_BACKEND_BOLT11_SAT=LndRestWallet
-      - MINT_LND_REST_ENDPOINT=https://regtest_lnd6_farid:8080
+      - MINT_LND_REST_ENDPOINT=https://2a96fec6bd37:8080
       - MINT_LND_REST_CERT=/tls.cert
       - MINT_LND_REST_MACAROON=/admin-dummy.macaroon # use dummy file; we run lnd with `--no-macaroons` at the moment
-      - MINT_LND_REST_CERT_VERIFY=False # otherwise fails with: `certificate verify failed: Hostname mismatch, certificate is not valid for 'regtest_lnd6_farid'.`
+      - MINT_LND_REST_CERT_VERIFY=TRUE
     command: ["poetry", "run", "mint"]
     volumes:
       - ./data/lnd_common/tls.cert:/tls.cert
@@ -292,7 +400,7 @@ services:
 
   lnd6_farid_nutshell_wallet:
     container_name: regtest_lnd6_farid_nutshell_wallet
-    image: cashubtc/nutshell:0.16.5@sha256:7209a93720a38e78244643329b2a75ee5730363f2a4ef80a82c5bebc188b49dc
+    image: cashubtc/nutshell:0.21.0@sha256:beed25e291357368e35e1698bf2e4645d97ed435232a8f8ff6501c77d67c0b90
     restart: unless-stopped
     depends_on:
       lnd6_farid_nutshell_mint:
@@ -303,18 +411,18 @@ services:
       - API_PORT=4448
       - TOR=FALSE
       - DEBUG=TRUE
-    command: ["poetry", "run", "cashu", "-d"]
+    entrypoint: ["tail", "-f", "/dev/null"] # keep container running
     volumes:
       - ./data/lnd_common/tls.cert:/tls.cert
     ports:
       - "14448:4448"
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:4448/info || exit 1"]
+      test: ["CMD-SHELL", "poetry run cashu info || exit 1"]
       interval: 10s
-      timeout: 10s
+      timeout: 20s
       retries: 20
       start_period: 60s
-      start_interval: 3s
+      start_interval: 10s
 
   cln2_bob:
     container_name: regtest_cln2_bob
@@ -555,6 +663,7 @@ services:
       - '--rpclisten=regtest_lnd6_farid:10009'
       - '--rpclisten=localhost:10009' # needed for healthcheck
       - '--tlscertduration=876000h'
+      - '--tlsextradomain=regtest_lnd6_farid'
       #- '--debuglevel=info'
       - '--debuglevel=debug'
       - '--maxpendingchannels=21'
@@ -675,6 +784,13 @@ services:
       - ./data/lnd_common/admin-dummy.macaroon:/RTL/macaroons/admin.macaroon
       - ./data/cln0_app/regtest/dummy.rtl.rune:/cln0-dummy.rune
       - ./data/cln1_alice/regtest/dummy.rtl.rune:/cln1-dummy.rune
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+      start_interval: 3s
 
 volumes:
   bitcoind-data:
