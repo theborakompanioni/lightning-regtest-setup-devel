@@ -154,10 +154,24 @@ ps *args='':
 cln0-exec +command:
   @just cln::exec {{cln0_container_name}} {{command}}
 
-[private]
+# Execute a command on instance "cln1"
+[group("cln1")]
+cln1-exec +command:
+  @just cln::exec {{cln1_container_name}} {{command}}
+
+[group("cln1")]
+cln1-invoice amount_msat='1000' label=uuid():
+  @just cln::create-invoice {{cln1_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
+
+# Execute a command on instance "cln3"
 [group("cln3")]
 cln3-exec +command:
   @just cln::exec {{cln3_container_name}} {{command}}
+
+[group("cln3")]
+cln3-invoice amount_msat='1000' label=uuid():
+  @just cln::create-invoice {{cln3_container_name}} {{amount_msat}} {{label}} | jq --raw-output .bolt11
+
 
 # Execute a command on instance "lnd6"
 [group("lnd6")]

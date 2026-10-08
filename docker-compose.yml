@@ -367,6 +367,8 @@ services:
     depends_on:
       lnd6_farid:
         condition: service_healthy
+    links:
+      - "lnd6_farid:2a96fec6bd37" # /tls.cert is valid for DNS "2a96fec6bd37" and "localhost"
     environment:
       # https://github.com/cashubtc/nutshell/blob/main/.env.example
       - MINT_LISTEN_HOST=0.0.0.0
@@ -378,10 +380,10 @@ services:
       - MINT_INFO_NAME=Farid LND6 Nutshell Mint
       #- MINT_DATABASE=postgres://cashu:cashu@localhost:5432/cashu
       - MINT_BACKEND_BOLT11_SAT=LndRestWallet
-      - MINT_LND_REST_ENDPOINT=https://regtest_lnd6_farid:8080
+      - MINT_LND_REST_ENDPOINT=https://2a96fec6bd37:8080
       - MINT_LND_REST_CERT=/tls.cert
       - MINT_LND_REST_MACAROON=/admin-dummy.macaroon # use dummy file; we run lnd with `--no-macaroons` at the moment
-      - MINT_LND_REST_CERT_VERIFY=False # otherwise fails with: `certificate verify failed: Hostname mismatch, certificate is not valid for 'regtest_lnd6_farid'.`
+      - MINT_LND_REST_CERT_VERIFY=TRUE
     command: ["poetry", "run", "mint"]
     volumes:
       - ./data/lnd_common/tls.cert:/tls.cert
